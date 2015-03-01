@@ -7,19 +7,35 @@ require_relative "compiler/intermediate_code"
 require_relative "compiler/code_generator"
 
 module Compiler
-  if ARGV[0].nil?
+  #ruby lib/compiler.rb --parse filename for parsing with parse table generation
+  #ruby lib/compiler.rb filename for parsing with out parse table generation
+  if ARGV.length==1
+    filename=ARGV[0]
+    generate_parse_table=false
+  elsif ARGV.length==2
+    filename=ARGV[1]
+    if(ARGV[0]=="--parse")
+      generate_parse_table=true
+    else
+      puts "Unknown Argument"
+      generate_parse_table=false
+    end
+  else
+    puts "File not Specified"
+    exit
+  end
+  if filename.nil?
     puts "File not Specified";
     exit;
   end
-  unless ARGV[0].end_with?(".c")
+  unless filename.end_with?(".c")
     puts "Incompatible File";
     exit;
   end
-
   #---------------------------------------------LEXICAL-ANALYSIS-------------------------------------------
   
   mode = "r";
-  file = File.open("#{ARGV[0]}", mode);
+  file = File.open("#{filename}", mode);
   words= file.read;
   file.close;
   words=words.split("\n")
@@ -31,7 +47,7 @@ module Compiler
   tokens=tokens.split("\n").join(" ");
   tokens=tokens+" "
   #p tokens
-  productions=parser(tokens);
+  productions=parser(tokens,generate_parse_table);
   puts productions
   #tree=parse_tree(productions);
 

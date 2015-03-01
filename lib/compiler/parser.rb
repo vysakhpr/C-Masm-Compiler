@@ -375,9 +375,7 @@ end
 
 
 
-
-
-def parser(z)
+def parser(z,generate_table)
   #g=[ "S@@ T SS ", "SS@@ + T SS ", "SS@@ epsilon ", "T@@ F TT ", "TT@@ * F TT ", "TT@@ epsilon ", "F@@ ( S ) ", "F@@ id "]
   #gram_sym=[ "S","SS","T","TT","F","+","*","id","(",")"]
   #term_sym=[ "id","+","*","(",")","$","epsilon"]
@@ -416,8 +414,65 @@ def parser(z)
   #print "\n"
   #end
   #print followof("S",term_sym,non_term_sym,g)
-
-  table(g,term_sym,non_term_sym,gram_sym, start_sym)
+  if generate_table==true
+    table(g,term_sym,non_term_sym,gram_sym, start_sym)
+    action = File.open("lib/compiler/parse_action_table.gram", "w");
+    for x in $action 
+      for y  in x
+        if y==nil
+          action.write("_");
+        else
+          action.write(y);
+        end
+        action.write("\t");
+      end
+      action.write("\n")
+    end
+    action.close;
+    goto = File.open("lib/compiler/parse_goto_table.gram", "w");
+    for x in $goto_table 
+      for y  in x
+        if y==nil
+          goto.write("_");
+        else
+          goto.write(y);
+        end
+        goto.write("\t");
+      end
+      goto.write("\n")
+    end
+    goto.close;
+  else  
+    $action=Array.new(Array.new())
+    $goto_table=Array.new(Array.new())
+    action = File.open("lib/compiler/parse_action_table.gram", "r");
+    words=action.read();
+    action.close;
+    words=words.split("\n")
+    words.each do |word|
+        word=word.split(/[\t]/)
+        i=0
+        while i<word.length
+          word[i]=nil if word[i]=="_"
+          i=i+1
+        end
+        $action<<word
+    end
+    goto = File.open("lib/compiler/parse_goto_table.gram", "r");
+    words=goto.read();
+    goto.close;
+    words=words.split("\n")
+    words.each do |word|
+        word=word.split(/[\t]/)
+        i=0
+        while i<word.length
+          word[i]=nil if word[i]=="_"
+          i=i+1
+        end
+        $goto_table<<word
+    end
+  end
+  
   return parse(z,term_sym,non_term_sym,g)
   #print followof("EXPR",term_sym, non_term_sym,g)
   #print left_recursion("EXPR",g)
