@@ -24,6 +24,7 @@ module Compiler
   file.close;
   words=words.split("\n")
   tokens=scanner(words)
+  puts tokens
   #p $NUM
   #p $ID
   #---------------------------------------------SYNTACTIC-ANALYSIS-----------------------------------------
@@ -31,11 +32,11 @@ module Compiler
   tokens=tokens+" "
   #p tokens
   productions=parser(tokens);
-  #puts productions
+  puts productions
   #tree=parse_tree(productions);
 
   #---------------------------------------------SEMANTIC-ANALYSIS-------------------------------------------
-  semantic(productions)
+  #semantic(productions)
   #----------------------------------------INTERMEDIATE-CODE-GENERATION-------------------------------------
   intermediate_code=intergen(productions)
   puts intermediate_code
@@ -43,13 +44,17 @@ module Compiler
   #---------------------------------------------CODE OPTIMIZATION-------------------------------------------
 
   #----------------------------------------------CODE GENERATION--------------------------------------------
-  code=codegen(intermediate_code)
+  #code=codegen(intermediate_code)
   #puts code
-  mode = "w";
-  file = File.open("masm/8086/out.asm", mode);
-  code.each do |c|
-    file.write(c+"\n");
-  end
-  file.close;
+  #mode = "w";
+  #file = File.open("masm/8086/out.asm", mode);
+  #productions.each do |d|
+    #d.each do |c|
+  #code.each do |c|
+   #file.write(c);
+   #file.write("\n")
+  #end
+  #end
+  #file.close;
   #puts $PRINTBUF
 end

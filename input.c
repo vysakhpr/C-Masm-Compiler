@@ -1,8 +1,21 @@
-void main()
-	{
-		int a,b,sum,diff;
-		a=45;
-		b=55;
-		a=a+b;
-		printf("the sum is %d",a);	
-  	}
+
+void main(){
+ int a,b,c;
+ a=10;
+ b=5;
+ c=6;
+ if(a>b)
+  {
+   a=a+1;
+  }
+ else if(a<b)
+  {
+   a=a-1;
+  }
+ else 
+  {
+   a=0;
+  } 
+}
+
+

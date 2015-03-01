@@ -22,79 +22,211 @@ def intergen(production)
     #term_value=Array.new
     #expr_value=Array.new
     printbuff=printbuffer(production)
-    temp_count=0
+    switch_stack=Array.new 
+    switch_count=0
+    loop_stack=Array.new
 	for x in production
         case x
-        when "NAME-> main "
+        when "NAME@@ main "
             temp_count=0;
-        when "FNAME-> NAME ( ) "
+        when "FNAME@@ NAME ( ) "
             
-        when "DATATYPE-> char "
+        when "DATATYPE@@ char "
             
-        when "DATATYPE-> void "
+        when "DATATYPE@@ void "
             
-        when "DATATYPE-> int "
+        when "DATATYPE@@ int "
 
-        when "DATATYPE-> float " 
+        when "DATATYPE@@ float " 
             
-        when "IDS-> id "
+        when "IDS@@ id "
             id_object=identifier.shift
             print_var.push(id_object)
-        when "IDS-> ID , IDS "
+        when "IDS@@ ID , IDS "
             
-        when "STMT-> DATATYPE IDS "
+        when "STMT@@ DATATYPE IDS "
             print_var=[]
-        when "ID-> id "
+        when "ID@@ id "
         	id_object=identifier.shift
             print_var.push(id_object)
-        when "FACTOR-> num "
+        when "FACTOR@@ num "
             num_object=number.shift
             inter_code<< "_t#{temp_count}=#{num_object.value}";
             temp.push("_t#{temp_count}");
             temp_count=temp_count+1;
             #fact_value.push(num_object.value)
-        when "FACTOR-> id "
+        when "FACTOR@@ id "
             ids_object=identifier.shift;
             inter_code<< "_t#{temp_count}=#{ids_object.lex_value}";
             temp.push("_t#{temp_count}");
             temp_count=temp_count+1;
             #fact_value.push(ids_object.lex_value);
-        when "TERM-> FACTOR "
+        when "TERM@@ FACTOR "
             #term_value.push(fact_value.pop)
-        when "EXPR-> TERM "
+        when "EXPR@@ TERM "
             #expr_value.push(term_value.pop)
-        when "EXPR-> EXPR + TERM "
+        when "EXPR@@ EXPR + TERM "
             t1=temp.pop
             t0=temp.pop
             inter_code<< "_t#{temp_count}=#{t0}+#{t1}";
             temp.push("_t#{temp_count}");
             temp_count=temp_count+1;
-        when "EXPR-> EXPR - TERM "           
+        when "EXPR@@ EXPR - TERM "           
             t1=temp.pop
             t0=temp.pop
             inter_code<< "_t#{temp_count}=#{t0}-#{t1}";
             temp.push("_t#{temp_count}");
             temp_count=temp_count+1;
-        when "TERM-> TERM / FACTOR "
+        when "TERM@@ TERM / FACTOR "
             t1=temp.pop
             t0=temp.pop
             inter_code<< "_t#{temp_count}=#{t0}/#{t1}";
             temp.push("_t#{temp_count}");
             temp_count=temp_count+1;
-        when "TERM-> TERM * FACTOR "
+        when "TERM@@ TERM * FACTOR "
             t1=temp.pop
             t0=temp.pop
             inter_code<< "_t#{temp_count}=#{t0}*#{t1}";
             temp.push("_t#{temp_count}");
             temp_count=temp_count+1;
-        when "FACTOR-> ( EXPR ) "
+        when "FACTOR@@ ( EXPR ) "
         	fact_value.push(expr_value.pop)
-        when "STMT-> ID = EXPR "
+        when "STMT@@ ID = EXPR "
         	id_lexeme=id_object.lex_value
             inter_code<< "#{id_lexeme}=#{temp.pop}";
             temp_count=0;
             print_var=[]
-        when "STMT-> printf ( string , IDS ) "
+        when "RELNEG@@ RELNEG < RELNEG "
+            t1=temp.pop
+            t0=temp.pop
+            inter_code<< "_t#{temp_count}=#{t0}<#{t1}";
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1;
+        when "RELNEG@@ EXPR < EXPR "
+            t1=temp.pop
+            t0=temp.pop
+            inter_code<< "_t#{temp_count}=#{t0}<#{t1}";
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1;
+        when "RELNEG@@ RELNEG > RELNEG "
+            t1=temp.pop
+            t0=temp.pop
+            inter_code<< "_t#{temp_count}=#{t0}>#{t1}";
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1;
+        when "RELNEG@@ EXPR > EXPR "
+            t1=temp.pop
+            t0=temp.pop
+            inter_code<< "_t#{temp_count}=#{t0}>#{t1}";
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1;
+        when "RELNEG@@ RELNEG < = RELNEG "
+            t1=temp.pop
+            t0=temp.pop
+            inter_code<< "_t#{temp_count}=#{t0}<=#{t1}";
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1;
+        when "RELNEG@@ EXPR < = EXPR "
+            t1=temp.pop
+            t0=temp.pop
+            inter_code<< "_t#{temp_count}=#{t0}<=#{t1}";
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1;
+        when "RELNEG@@ RELNEG > = RELNEG "
+            t1=temp.pop
+            t0=temp.pop
+            inter_code<< "_t#{temp_count}=#{t0}>=#{t1}";
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1;
+        when "RELNEG@@ EXPR > = EXPR "
+            t1=temp.pop
+            t0=temp.pop
+            inter_code<< "_t#{temp_count}=#{t0}>=#{t1}";
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1;
+        when "RELNEG@@ RELNEG = = RELNEG "
+            t1=temp.pop
+            t0=temp.pop
+            inter_code<< "_t#{temp_count}=#{t0}==#{t1}";
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1;
+        when "RELNEG@@ EXPR = = EXPR "
+            t1=temp.pop
+            t0=temp.pop
+            inter_code<< "_t#{temp_count}=#{t0}==#{t1}";
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1;
+        when "RELNEG@@ RELNEG ! = RELNEG "
+            t1=temp.pop
+            t0=temp.pop
+            inter_code<< "_t#{temp_count}=#{t0}!=#{t1}";
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1;
+        when "RELNEG@@ EXPR ! = EXPR "
+            t1=temp.pop
+            t0=temp.pop
+            inter_code<< "_t#{temp_count}=#{t0}!=#{t1}";
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1;
+        when "RELEXPR@@ RELEXPR | | RELTERM "
+            t1=temp.pop
+            t0=temp.pop
+            inter_code<< "_t#{temp_count}=#{t0}||#{t1}";
+            temp.push("_t#{temp_count}");
+            temp_count=0;
+        when "RELEXPR@@ RELTERM "
+            temp_count=0
+        when "RELTERM@@ RELTERM & & RELFACTOR "
+            t1=temp.pop
+            t0=temp.pop
+            inter_code<< "_t#{temp_count}=#{t0}&&#{t1}";
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1;
+        when "RELFACTOR@@ ! RELNEG "
+            t0=temp.pop
+            inter_code<<"_t#{temp_count}=_not_ #{t0}";
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1
+        when "IFSTMT@@ if ( RELEXPR ) "
+            t0=temp.pop
+            inter_code<<"_if_ #{t0} then"
+        when "ELSEIFSTMT@@ else if ( RELEXPR ) "
+            t0=temp.pop
+            inter_code<<"_else_if_ #{t0} then"
+        when "ELSE@@ else "
+            inter_code<<"_else_"
+        when "IFBLOCK@@ { STMTS } "
+            inter_code<<"_end_if_"
+        when "ELSEIFBLOCK@@ { STMTS } "
+            inter_code<<"_end_elseif_"
+        when "ELSEBLOCK@@ { STMTS } "
+            inter_code<<"_endelse_"
+        when "SWITCHEXPR@@ num "
+            num_object=number.shift
+            switch_stack.push(num_object.value);
+            #fact_value.push(num_object.value)
+        when "SWITCHEXPR@@ id "
+            ids_object=identifier.shift;
+            switch_stack.push(ids_object.value);
+        when " SWITCHSTMT-> switch ( SWITCHEXPR ) " 
+            switch_var=switch_stack.pop
+            switch_stack.push(switch_var)
+        when "IDNUM@@ num "
+            num_object=number.shift
+            inter_code<< "_t#{temp_count}=#{num_object.value}";
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1;
+            #fact_value.push(num_object.value)
+        when "IDNUM@@ id "
+            ids_object=identifier.shift;
+            inter_code<< "_t#{temp_count}=#{ids_object.lex_value}";
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1;
+        
+        when "CASEBLOCK@@ case IDNUM : "
+            t0=temp.pop
+            inter_code<<"_if_ #{t0} then"
+        when "STMT@@ printf ( string , IDS ) "
             string=printbuff.shift.lit_value
             string_array=string.split(/%[dcfu]/)
             format=string.scan(/%[dcfu]/)
@@ -123,7 +255,7 @@ def intergen(production)
                     $PRINTBUF<<"\"#{string_array[i]}" 
                 end
             end
-        when "STMT-> printf ( string ) "
+        when "STMT@@ printf ( string ) "
             string=printbuff.shift.lit_value
             inter_code<<"_printString_ #{string}"
             $PRINTBUF<<string

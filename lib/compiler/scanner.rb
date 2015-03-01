@@ -82,8 +82,9 @@ def scanner(words)
             b=b+peek
             i=i+1
             peek=word[i]
-          end while !(peek=~/^[A-Za-z0-9]$/).nil? 
-            keyword=["int","float","char","double","long","short","signed","unsigned","void","main","printf","if","else"];
+          end while !(peek=~/^[A-Za-z0-9_]$/).nil? 
+            keyword=["int","float","char","double","long","short","signed","unsigned","void","main","printf"];
+            keyword.concat(["if","else","switch","case","default","break"]);
           if keyword.include?(b)
             #indent=b          
             token=token+"#{b}\n"
@@ -102,7 +103,7 @@ def scanner(words)
         #end
   #<!---------------- Check for Operator ------------------------------------!>
 
-        elsif !(peek =~ /^[()+-;.=,\*\/\[\]{}%]$/).nil?
+        elsif !(peek =~ /^[()+-;.=,\*\/\[\]{}%<>!|&!]$/).nil?
           if peek=="{"                                                    #
             delim=delim+1
           elsif peek=="}"

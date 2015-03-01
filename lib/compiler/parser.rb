@@ -1,15 +1,17 @@
+require_relative "grammar"
+
 def closure(i,g)
   j=i
   f=0
   begin
     f=0
-    for k in j.find_all{|item| item =~ /^[A-Z]+->[ ][\W0-9a-zA-Z ]*[.][ ][A-Z]+[ ]?[a-zA-Z0-9\W ]*$/}
+    for k in j.find_all{|item| item =~ /^[A-Z]+@@[ ][\W0-9a-zA-Z ]*[.][ ][A-Z]+[ ]?[a-zA-Z0-9\W ]*$/}
       l=k[/[.][ ][A-Z]*[ ]/]
       l.delete!(". ")
-      for m in g.find_all{|item| item =~ /^#{l}->/}
-        n=m[/->[ ][\W0-9A-Za-z ]+/]
-        n.gsub!(/->/, '')
-        n=l+"-> ."+n+" "
+      for m in g.find_all{|item| item =~ /^#{l}@@/}
+        n=m[/@@[ ][\W0-9A-Za-z ]+/]
+        n.gsub!(/@@/, '')
+        n=l+"@@ ."+n+" "
         n=n.gsub(/[\s]+$/," ")
         unless j.include?(n)
           j<<n
@@ -28,8 +30,8 @@ def got(i,x,g)
     x=x.insert(0,"[")
     x=x.scan(/./).each_slice(2).map(&:join).join("]")
     x=x.insert(x.length,"]")
-    for k in i.find_all{|item| item =~ /^[A-Z]+->[ ][\W0-9a-zA-Z ]*[.] #{x} [\Wa-zA-Z0-9 ]*$/}
-    a=k[/^[A-Z]+->[ ][\WA-Za-z ]*[.]/]
+    for k in i.find_all{|item| item =~ /^[A-Z]+@@[ ][\W0-9a-zA-Z ]*[.] #{x} [\Wa-zA-Z0-9 ]*$/}
+    a=k[/^[A-Z]+@@[ ][\WA-Za-z ]*[.]/]
     a=a.gsub(".","")
     b=k[/[.] #{x} [\Wa-zA-Z ]*$/]
     #b=k[/[.] #{x} /]
@@ -45,7 +47,7 @@ def got(i,x,g)
 end
 
 def items(g,gram_sym, start_sym)
-  c=[closure(["SS-> . #{start_sym} "],g)]
+  c=[closure(["SS@@ . #{start_sym} "],g)]
   begin
     f=0
     for i in c
@@ -64,24 +66,50 @@ def items(g,gram_sym, start_sym)
 end
 
 
+def left_recursion(x,g)
+  betas=[]
+  lr=[]
+  k=g.find_all{|item| item =~ /^#{x}@@/}
+  alpha_grammars=g.find_all{|item| item=~ /^#{x}@@ #{x}/}
+  for i in k
+    unless alpha_grammars.include?(i)
+      betas<<i.gsub(/^#{x}@@/,"")
+    end
+  end
+  for l in alpha_grammars
+    alpha=l.gsub(/^#{x}@@ #{x}/,"")
+    for beta in betas
+      lr<<"#{x}@@ #{beta} #{x}#{x} " if !lr.include?("#{x}@@ #{beta} #{x}#{x} ")
+      lr<<"#{x}@@ #{beta} " if !lr.include?("#{x}@@ #{beta} ")
+      lr<<"#{x}#{x}@@ #{alpha} #{x}#{x} " if !lr.include?("#{x}#{x}@@ #{alpha} #{x}#{x} ")
+      lr<<"#{x}#{x}@@ #{alpha} " if !lr.include?("#{x}#{x}@@ #{alpha} ")
+    end
+  end
+  return lr
+end
+
+
 
 def firstof(x,term_sym, non_term_sym,g)
   f=[ ]
   if term_sym.include?(x)
     f=[x]
   elsif non_term_sym.include?(x)
-    for k in g.find_all{|item| item =~ /^#{x}->/}
+    for k in g.find_all{|item| item =~ /^#{x}@@/}
       n=nil
-      l=k[/->[\Wa-zA-Z0-9 ]+/]
-      l.delete!("->")
+      l=k[/@@[\Wa-zA-Z0-9\s]+/]
+      l.delete!("@@")
       l=l.split(" ")
-      for m in l
+      if(l.include?(x))
+        next
+      end
+      for m in l        
         unless firstof(m, term_sym, non_term_sym, g).include?("")
           n=m
           break;
         end
       end
-        if !(n.nil?)
+      if !(n.nil?)
         p=firstof(n, term_sym, non_term_sym, g) 
         for q in p
           unless f.include?(q)
@@ -106,14 +134,14 @@ def followof(x, term_sym, non_term_sym, g)
     x=x.insert(0,"[")
     x=x.scan(/./).each_slice(2).map(&:join).join("]")
     x=x.insert(x.length,"]")
-    for k in g.find_all{|item| item =~ /^[A-Z]+->[ ][\W0-9a-zA-Z ]*#{x} [\Wa-zA-Z0-9]+[ ][\Wa-zA-Z0-9 ]*$/}
-      l=k.gsub(/^[A-Z]+->[ ]/,"")
+    for k in g.find_all{|item| item =~ /^[A-Z]+@@[ ][\W0-9a-zA-Z ]*#{x} [\Wa-zA-Z0-9]+[ ][\Wa-zA-Z0-9 ]*$/}
+      l=k.gsub(/^[A-Z]+@@[ ]/,"")
       l=l[/#{x}[ ][^\s]+[ ]/]
       l=l.gsub("#{y}", "")
       l=l.gsub(/^[\s]+/,"")
       l=l.gsub(/[\s]+$/,"")
-      a=k[/^[A-Z]+->/]
-      a=a.gsub("->","")
+      a=k[/^[A-Z]+@@/]
+      a=a.gsub("@@","")
       #unless a==y
         n=firstof(l, term_sym, non_term_sym, g)
         for m in n  
@@ -128,9 +156,9 @@ def followof(x, term_sym, non_term_sym, g)
         end
       #end 
     end
-    for k in g.find_all{|item| item =~ /^[A-Z]+->[ ][\Wa-zA-Z0-9]* #{x} $/}
-      a=k[/^[A-Z]+->/]
-      a=a.gsub("->","") 
+    for k in g.find_all{|item| item =~ /^[A-Z]+@@[ ][\Wa-zA-Z0-9]* #{x} $/}
+      a=k[/^[A-Z]+@@/]
+      a=a.gsub("@@","") 
       unless a==y
         for b in followof(a,term_sym,non_term_sym,g)
           f<<b if !(f.include?(b))
@@ -147,7 +175,7 @@ def table(g, table_action_sym, table_goto_sym, gram_sym, start_sym)
   $action=Array.new(c.length){Array.new(table_action_sym.length)}
   $goto_table=Array.new(c.length){Array.new(table_goto_sym.length)}
   for i in (0...c.length)
-    for k in c[i].find_all{|item| item =~ /^[A-Z]+->[ ][\W0-9a-zA-Z ]*[.] [^\sA-Z]+ [\Wa-zA-Z0-9 ]*$/}
+    for k in c[i].find_all{|item| item =~ /^[A-Z]+@@[ ][\W0-9a-zA-Z ]*[.] [^\sA-Z]+ [\Wa-zA-Z0-9 ]*$/}
       a=k[/[.] [^\sA-Z]+[ ]/]
       a=a.gsub(". ","")
       a=a.gsub(" ","")
@@ -162,11 +190,11 @@ def table(g, table_action_sym, table_goto_sym, gram_sym, start_sym)
       end
     end
 
-    for k in c[i].find_all{|item| item =~ /^[A-Z]+->[ ][\W0-9a-zA-Z ]*[.][ ]$/}
+    for k in c[i].find_all{|item| item =~ /^[A-Z]+@@[ ][\W0-9a-zA-Z ]*[.][ ]$/}
       #puts k
       l=k.gsub(". ","")
-      a=k[/^[A-Z]+->/]
-      a=a.gsub("->","")
+      a=k[/^[A-Z]+@@/]
+      a=a.gsub("@@","")
       #unless a == "SS"
         j=g.index(l)
         #puts j
@@ -178,7 +206,7 @@ def table(g, table_action_sym, table_goto_sym, gram_sym, start_sym)
       #end
     end 
 
-    if c[i].include?("SS-> #{start_sym} . ")
+    if c[i].include?("SS@@ #{start_sym} . ")
       $action[i][table_action_sym.index("$")]="ac"
     end
 
@@ -237,10 +265,10 @@ def parse(word,term_sym,non_term_sym,g)
       b=d.gsub(/^[r]/,"")
       b=b.to_i
       x=g[b-1]
-      c=x[/^[A-Z]+->/]
-      y=x[/->[\Wa-zA-Z0-9 ]+$/]
-      y=y.gsub("->","")
-      c=c.gsub("->","")
+      c=x[/^[A-Z]+@@/]
+      y=x[/@@[\Wa-zA-Z0-9 ]+$/]
+      y=y.gsub("@@","")
+      c=c.gsub("@@","")
       y=y.split(" ")      
       for i in (0...y.length)
         l=l-1
@@ -255,7 +283,7 @@ def parse(word,term_sym,non_term_sym,g)
       return prod
     else  
       puts "ERROR"
-      break 
+      return prod 
     end
   end
   
@@ -274,7 +302,7 @@ def parse_tree(input_dup)
   id_finder=0
   for i in 0..(input_dup.length-1)
     inputvalue=input_dup[i]
-    dup_array=inputvalue.split("->")
+    dup_array=inputvalue.split("@@")
     id_finder=id_finder+1
     value={:id=>id_finder,:data=>dup_array[0],:parent_id=>nil}
     dup_inputvalue=dup_array[1]
@@ -350,57 +378,37 @@ end
 
 
 def parser(z)
-  #g=[ "S-> T SS ", "SS-> + T SS ", "SS-> epsilon ", "T-> F TT ", "TT-> * F TT ", "TT-> epsilon ", "F-> ( S ) ", "F-> id "]
+  #g=[ "S@@ T SS ", "SS@@ + T SS ", "SS@@ epsilon ", "T@@ F TT ", "TT@@ * F TT ", "TT@@ epsilon ", "F@@ ( S ) ", "F@@ id "]
   #gram_sym=[ "S","SS","T","TT","F","+","*","id","(",")"]
   #term_sym=[ "id","+","*","(",")","$","epsilon"]
   #non_term_sym=["S","T","F","SS", "TT"]
   #print followof("SS",term_sym,non_term_sym,g)
 
-  #g=[ "S-> L = R ","S-> R ","L-> * R ","L-> id ","R-> L "]
+  #g=[ "S@@ L = R ","S@@ R ","L@@ * R ","L@@ id ","R@@ L "]
   #gram_sym=["S","L","R","=","*","id"]
   #for x in items(g,gram_sym)
   #print x
   #print "\n"
   #end
-  #---------------------------------------A->B--&B->C---does'nt work-------------------------------------
-  g=["S-> DATATYPE FNAME { STMTS } ",
-     "STMTS-> STMT ; STMTS ",
-     "STMTS-> STMT ; ",
-     "STMT-> DATATYPE IDS ",
-     "STMT-> ID = EXPR ",
-     "STMT-> printf ( string , IDS ) ",
-     "STMT-> printf ( string ) ",
-     "EXPR-> EXPR + TERM ",
-     "EXPR-> EXPR - TERM ",
-     "EXPR-> TERM ",
-     "TERM-> TERM / FACTOR ",
-     "TERM-> TERM * FACTOR ",
-     "TERM-> FACTOR ",
-     "FACTOR-> ( EXPR ) ",
-     "FACTOR-> id ",
-     "FACTOR-> num ", 
-     "IDS-> ID , IDS ",
-     "IDS-> id ", 
-     "DATATYPE-> int ",
-     "DATATYPE-> float ",
-     "DATATYPE-> void ",
-     "DATATYPE-> char ",
-     "FNAME-> NAME ( ) ",
-     "NAME-> main ",
-     "ID-> id "]
-     $GRAM_SYM=g
-  gram_sym=["S","ID","DATATYPE","EXPR","TERM","FACTOR", "FNAME","NAME","STMT", "IDS" ,"STMTS","id","num","int","char","float","void","main","printf","string","+","*","=","{","}","(",")",";",",","$","epsilon","-","/"]
-  term_sym=["id","num","int","void","char","float","main","printf","string","+","*","=","{","}","(",")",";",",","$","epsilon","-","/"]
-  non_term_sym=["S","DATATYPE","EXPR","TERM","FACTOR" ,"FNAME","NAME","STMT","IDS","STMTS","ID"]
-  start_sym="S"
+  #---------------------------------------A@@B--&B@@C---does'nt work-------------------------------------
+  g=[]
+  for x in $grammar
+    g<<x.gsub("->","@@")
+  end
+  gram_sym=$symbols
+  term_sym=$terminals
+  non_term_sym=$nonterminals
+  start_sym=$start
   
-  #g=["S-> S + T ","S-> T ","T-> T * F ","T-> F ","F-> ( S ) ","F-> id "]
+  
+  #g=["S@@ S + T ","S@@ T ","T@@ T * F ","T@@ F ","F@@ ( S ) ","F@@ id "]
   #gram_sym=["S","T","F","id","+","*","(",")","$","epsilon"]
   #term_sym=["id","+","*","(",")","$","epsilon"]
   #non_term_sym=["S","T","F"]
   #start_sym="S"
-  #c=[closure(["SS-> . #{start_sym} "],g)]
+  #c=[closure(["SS@@ . #{start_sym} "],g)]
   #puts c
+  #return items(g,gram_sym,start_sym)
   #z=items(g,gram_sym,start_sym)
   #puts z.length
   #for x in z
@@ -408,6 +416,9 @@ def parser(z)
   #print "\n"
   #end
   #print followof("S",term_sym,non_term_sym,g)
+
   table(g,term_sym,non_term_sym,gram_sym, start_sym)
   return parse(z,term_sym,non_term_sym,g)
+  #print followof("EXPR",term_sym, non_term_sym,g)
+  #print left_recursion("EXPR",g)
 end

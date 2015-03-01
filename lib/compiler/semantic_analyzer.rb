@@ -20,7 +20,7 @@ def semantic(production)
     ob_stack=Array.new
     for x in production
         case x
-        when "NAME-> main "
+        when "NAME@@ main "
             c=0;                                                  
             name='main';
             ids_lexeme=Array.new;
@@ -28,17 +28,17 @@ def semantic(production)
            datatype_stack=Array.new;
            datatype_stack_dup=Array.new;
             temp_count=0;
-        when "FNAME-> NAME ( ) "
+        when "FNAME@@ NAME ( ) "
             fname=name+'()';
-        when "DATATYPE-> char "
+        when "DATATYPE@@ char "
             datatype='%c';
-        when "DATATYPE-> void "
+        when "DATATYPE@@ void "
             datatype='void';
-        when "DATATYPE-> int "
+        when "DATATYPE@@ int "
             datatype='%d';
-        when "DATATYPE-> float "
+        when "DATATYPE@@ float "
             datatype='%f';    
-        when "IDS-> id "
+        when "IDS@@ id "
             ids_object=identifier.shift;
             ids_object.inc_count; 
             datatype_stack_dup.push(ids_object);
@@ -48,7 +48,7 @@ def semantic(production)
                 c=c+1;
             end
             ids_lexeme.push(ids_object.lex_value);
-        when "IDS-> ID , IDS "
+        when "IDS@@ ID , IDS "
             ids_object=datatype_stack.pop();                                        
             if datatype
                 ids_type=datatype;
@@ -56,7 +56,7 @@ def semantic(production)
                 c=c+1;
             end
             ids_lexeme.push(ids_object.lex_value);
-        when "STMT-> DATATYPE IDS "
+        when "STMT@@ DATATYPE IDS "
             for lx  in ids_lexeme
              if !ids_lexeme1.include?(lx)
                if h=$ID.find_all{|h| h.lex_value==lx}
@@ -79,29 +79,29 @@ def semantic(production)
             ids_lexeme=[];
             datatype=nil;
             c=0
-        when "ID-> id "
+        when "ID@@ id "
             id_object=identifier.shift;
             id_object.inc_count;                                                   
             datatype_stack.push(id_object);
             datatype_stack_dup.push(id_object);
-        when "FACTOR-> num "
+        when "FACTOR@@ num "
             num_object=number.shift;
             ob_stack.push(num_object)
             #fact_type=num_object.type_value;
             #fact_value=num_object.value;
             #fact_line=num_object.line_value;
-        when "FACTOR-> id "
+        when "FACTOR@@ id "
             ids_object=identifier.shift;
             ids_object.inc_count; 
             ob_stack.push(ids_object)                                                  
             #fact_type=ids_object.type_value;
             #fact_value=ids_object.lex_value;
             #fact_line=ids_object.line_value;
-        when "TERM-> FACTOR "
+        when "TERM@@ FACTOR "
             #term_type=fact_type;
             #term_value=fact_value;
             #term_line=fact_line;
-        when "TERM-> TERM * FACTOR "
+        when "TERM@@ TERM * FACTOR "
             e=0
             t1=ob_stack.pop
             t0=ob_stack.pop
@@ -182,7 +182,7 @@ def semantic(production)
             #p expr_type
             #p t0
             ob_stack.push(t0)
-        when "TERM-> TERM / FACTOR "
+        when "TERM@@ TERM / FACTOR "
             e=0
             t1=ob_stack.pop
             t0=ob_stack.pop
@@ -263,11 +263,11 @@ def semantic(production)
             #p expr_type
             #p t0
             ob_stack.push(t0)
-        when "EXPR-> TERM "
+        when "EXPR@@ TERM "
             #expr_type=term_type;
             #expr_value=term_value;
             #expr_line=term_line;
-        when "EXPR-> EXPR + TERM "
+        when "EXPR@@ EXPR + TERM "
             e=0
             t1=ob_stack.pop
             t0=ob_stack.pop
@@ -346,7 +346,7 @@ def semantic(production)
             #p expr_type
             #p t0
             ob_stack.push(t0)
-        when "EXPR-> EXPR - TERM "
+        when "EXPR@@ EXPR - TERM "
             e=0;
             t1=ob_stack.pop
             t0=ob_stack.pop
@@ -420,7 +420,7 @@ def semantic(production)
             t0.temp_init(expr_type,expr_value)
 
             ob_stack.push(t0)
-        when "STMT-> ID = EXPR "
+        when "STMT@@ ID = EXPR "
             id_object=datatype_stack.pop;
             id_type=id_object.type_value;
             id_lexeme=id_object.lex_value;
@@ -450,9 +450,9 @@ def semantic(production)
             id_object.value_assign(expr_value)
             c=0
 
-        when "FACTOR-> ( EXPR ) "
+        when "FACTOR@@ ( EXPR ) "
 
-        when "STMT-> printf ( string , IDS ) "
+        when "STMT@@ printf ( string , IDS ) "
             string=literal.pop;
             #puts string.lit_value
             count_ids=(string.lit_value).scan(/[%][dfcu]/).count;
