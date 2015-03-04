@@ -60,17 +60,17 @@ module Compiler
   #---------------------------------------------CODE OPTIMIZATION-------------------------------------------
 
   #----------------------------------------------CODE GENERATION--------------------------------------------
-  #code=codegen(intermediate_code)
+  code=codegen(intermediate_code)
   #puts code
-  #mode = "w";
-  #file = File.open("masm/8086/out.asm", mode);
+  mode = "w";
+  file = File.open("masm/8086/out.asm", mode);
   #productions.each do |d|
     #d.each do |c|
-  #code.each do |c|
-   #file.write(c);
-   #file.write("\n")
+  code.each do |c|
+   file.write(c);
+   file.write("\n")
+  end
   #end
-  #end
-  #file.close;
+  file.close;
   #puts $PRINTBUF
 end

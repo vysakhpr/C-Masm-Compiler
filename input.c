@@ -1,10 +1,10 @@
 void main(){
- 	int a,b,c;
+ 	int a,b;
  	a=10;
- 	switch(a){
- 		case 1: printf("Haha");break;
- 		case 10:printf("Haha");break;
- 		default:printf("LOL");
+ 	b=15;
+ 	while(a<b)
+ 	{
+ 		printf("Hello");
  	}
  }
 

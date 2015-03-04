@@ -80,12 +80,19 @@ $grammar=[ "S-> DATATYPE FNAME BLOCK ",
 "IDNUM-> id ",
 "IDNUM-> num ",
 "SWITCHEXPR-> id ",
-"SWITCHEXPR-> num "]
+"SWITCHEXPR-> num ",
+"STMTS-> WHILESTMT WHILEBLOCK ",
+"STMTS-> WHILESTMT WHILEBLOCK STMTS ",
+"WHILESTMT-> while ( RELEXPR ) ",
+"WHILEBLOCK-> { STMTS } "]
 
 $symbols=["S","ID","DATATYPE","EXPR","TERM","FACTOR", "FNAME","NAME","STMT", "IDS" ,"STMTS","id","num","int","char","float","void","main","printf","string","+","*","=","{","}","(",")",";",",","$","epsilon","-","/"]
 $symbols.concat(["CASEBLOCK","SWITCHSTMT","ELSEIFSTMT","ELSE","IFSTMT","COND","BLOCK","IFBLOCK","ELSEBLOCK","ELSEIFBLOCK","RELEXPR","RELFACTOR","RELTERM","RELNEG","ELSEIF","SWITCHEXPR","SWITCHBLOCK","CASESTMTS","CASESTMT","DEFAULTSTMT","IDNUM","if","else","<",">","!","switch","break","case",":","default","&","|","!"])
+$symbols.concat(["WHILESTMT","WHILEBLOCK","while","for","do"])
 $terminals=["id","num","int","void","char","float","main","printf","string","+","*","=","{","}","(",")",";",",","$","epsilon","-","/"]
 $terminals.concat(["if","else","<",">","!","switch","break","case",":","default","&","|","!"])
+$terminals.concat(["while","for","do"])
 $nonterminals=["S","DATATYPE","EXPR","TERM","FACTOR" ,"FNAME","NAME","STMT","IDS","STMTS","ID"]
 $nonterminals.concat(["CASEBLOCK","SWITCHSTMT","ELSEIFSTMT","ELSE","IFSTMT","COND","BLOCK","IFBLOCK","ELSEBLOCK","ELSEIFBLOCK","RELEXPR","RELFACTOR","RELTERM","RELNEG","ELSEIF","SWITCHEXPR","SWITCHBLOCK","CASESTMTS","CASESTMT","DEFAULTSTMT","IDNUM"])
+$nonterminals.concat(["WHILESTMT","WHILEBLOCK"])
 $start="S"
