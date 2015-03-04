@@ -42,7 +42,7 @@ def intergen(production)
         if x.start_with?("STMTS@@ SWITCHSTMT ")
             inter_code<<"_end_if_"
             if break_flag==1
-                inter_code<<"_break_label_#{break_label}"
+                inter_code<<"_break_label_#{break_label}:"
                 break_label=break_label+1
                 break_flag=0
             end
@@ -291,8 +291,9 @@ def intergen(production)
             inter_code<<"_printString_ #{string}"
             $PRINTBUF<<string
 
-        when "STMT-> break "
+        when "STMT@@ break "
             break_flag=1
+            inter_code<<"_goto_ _break_label_#{break_label}"
         end
 
         if x.start_with?("CASESTMTS@@ CASEBLOCK ") or x.start_with?("CASESTMTS@@ CASESTMTS CASEBLOCK ")
