@@ -24,8 +24,29 @@ def intergen(production)
     printbuff=printbuffer(production)
     switch_stack=Array.new 
     switch_count=0
+    is_switch_statement=0
+    break_flag=0
+    break_label=0
+    is_default_flag=0
     loop_stack=Array.new
 	for x in production
+        #if x.start_with?("STMT@@")
+         #   if is_switch_statement==1
+          #      inter_code<<"_switch_label_#{switch_count-1}:"
+           #     is_switch_statement=0
+            #end
+        #end
+        if x.start_with?("STMTS@@ IFSTMT ")
+            inter_code<<"_end_if_"
+        end
+        if x.start_with?("STMTS@@ SWITCHSTMT ")
+            inter_code<<"_end_if_"
+            if break_flag==1
+                inter_code<<"_break_label_#{break_label}"
+                break_label=break_label+1
+                break_flag=0
+            end
+        end
         case x
         when "NAME@@ main "
             temp_count=0;
@@ -43,7 +64,7 @@ def intergen(production)
             id_object=identifier.shift
             print_var.push(id_object)
         when "IDS@@ ID , IDS "
-            
+                    
         when "STMT@@ DATATYPE IDS "
             print_var=[]
         when "ID@@ id "
@@ -189,26 +210,22 @@ def intergen(production)
             temp_count=temp_count+1
         when "IFSTMT@@ if ( RELEXPR ) "
             t0=temp.pop
-            inter_code<<"_if_ #{t0} then"
+            inter_code<<"_if_ #{t0} _then"
         when "ELSEIFSTMT@@ else if ( RELEXPR ) "
             t0=temp.pop
-            inter_code<<"_else_if_ #{t0} then"
+            inter_code<<"_else_if_ #{t0} _then"
         when "ELSE@@ else "
-            inter_code<<"_else_"
         when "IFBLOCK@@ { STMTS } "
-            inter_code<<"_end_if_"
         when "ELSEIFBLOCK@@ { STMTS } "
-            inter_code<<"_end_elseif_"
         when "ELSEBLOCK@@ { STMTS } "
-            inter_code<<"_endelse_"
         when "SWITCHEXPR@@ num "
             num_object=number.shift
             switch_stack.push(num_object.value);
             #fact_value.push(num_object.value)
         when "SWITCHEXPR@@ id "
             ids_object=identifier.shift;
-            switch_stack.push(ids_object.value);
-        when " SWITCHSTMT-> switch ( SWITCHEXPR ) " 
+            switch_stack.push(ids_object.lex_value);
+        when "SWITCHSTMT@@ switch ( SWITCHEXPR ) " 
             switch_var=switch_stack.pop
             switch_stack.push(switch_var)
         when "IDNUM@@ num "
@@ -222,10 +239,24 @@ def intergen(production)
             inter_code<< "_t#{temp_count}=#{ids_object.lex_value}";
             temp.push("_t#{temp_count}");
             temp_count=temp_count+1;
-        
         when "CASEBLOCK@@ case IDNUM : "
             t0=temp.pop
-            inter_code<<"_if_ #{t0} then"
+            switch_var=switch_stack.pop
+            inter_code<<"_s=#{t0}!=#{switch_var}"
+            inter_code<<"_if_ _s"
+            inter_code<<"_goto_ _switch_label_#{switch_count}"
+            inter_code<<"_end_if_"
+            is_switch_statement=1
+            switch_count=switch_count+1
+            switch_stack.push(switch_var)
+        when "STMTS@@ SWITCHSTMT SWITCHBLOCK "
+            switch_stack.pop
+        when "STMTS@@ SWITCHSTMT SWITCHBLOCK STMTS "
+            switch_stack.pop
+        when "CASEBLOCK@@ default : " 
+            is_default_flag=1
+            switch_count=switch_count+1
+            is_switch_statement=1
         when "STMT@@ printf ( string , IDS ) "
             string=printbuff.shift.lit_value
             string_array=string.split(/%[dcfu]/)
@@ -259,7 +290,19 @@ def intergen(production)
             string=printbuff.shift.lit_value
             inter_code<<"_printString_ #{string}"
             $PRINTBUF<<string
+
+        when "STMT-> break "
+            break_flag=1
         end
+
+        if x.start_with?("CASESTMTS@@ CASEBLOCK ") or x.start_with?("CASESTMTS@@ CASESTMTS CASEBLOCK ")
+            if is_default_flag==1
+                is_default_flag=0
+            else
+                inter_code<<"_switch_label_#{switch_count-1}:"
+            end
+        end
+
     end 
     return inter_code   
 end
