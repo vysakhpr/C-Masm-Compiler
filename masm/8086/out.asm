@@ -1,6 +1,6 @@
 assume cs:code,ds:data
 data segment
-cmc_msg0 db 0ah,0dh,"Hello"$"
+cmc_msg0 db 0ah,0dh,"Haha"$"
 cmc_out db '        $'
 cmc_t0 dw 02
 a dw 02

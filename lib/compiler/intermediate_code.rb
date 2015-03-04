@@ -24,10 +24,15 @@ def intergen(production)
     printbuff=printbuffer(production)
     switch_stack=Array.new 
     switch_count=0
-    is_switch_statement=0
-    break_flag=0
-    break_label=0
-    is_default_flag=0
+    switch_count_stack=Array.new
+    break_flag_stack=Array.new
+    break_flag_stack.push(0)
+    break_label_count=0
+    break_label_stack=Array.new
+    loop_count=0
+    loop_label_stack=Array.new
+    is_default_flag_stack=Array.new
+    is_default_flag_stack.push(0)
     loop_stack=Array.new
 	for x in production
         #if x.start_with?("STMT@@")
@@ -39,12 +44,23 @@ def intergen(production)
         if x.start_with?("STMTS@@ IFSTMT ")
             inter_code<<"_end_if_"
         end
-        if x.start_with?("STMTS@@ SWITCHSTMT ")
+        if x.start_with?("SWITCHBLOCK@@ ")
             inter_code<<"_end_if_"
-            if break_flag==1
-                inter_code<<"_break_label_#{break_label}:"
-                break_label=break_label+1
-                break_flag=0
+            if break_flag_stack.pop==1
+                inter_code<<"_break_label_#{break_label_stack.pop}:"
+            else
+                break_flag_stack.push(0)
+            end
+            switch_stack.pop
+        end
+        if x.start_with?("WHILEBLOCK@@ ")
+            l=loop_label_stack.pop
+            inter_code<<"_goto_ _loop_label_#{l}"
+            inter_code<<"_end_if_"
+            if break_flag_stack.pop==1
+                inter_code<<"_break_label_#{break_label_stack.pop}:"
+            else
+                break_flag_stack.push(0)
             end
         end
         case x
@@ -245,18 +261,12 @@ def intergen(production)
             inter_code<<"_s=#{t0}!=#{switch_var}"
             inter_code<<"_if_ _s"
             inter_code<<"_goto_ _switch_label_#{switch_count}"
+            switch_count_stack.push(switch_count)
             inter_code<<"_end_if_"
-            is_switch_statement=1
             switch_count=switch_count+1
             switch_stack.push(switch_var)
-        when "STMTS@@ SWITCHSTMT SWITCHBLOCK "
-            switch_stack.pop
-        when "STMTS@@ SWITCHSTMT SWITCHBLOCK STMTS "
-            switch_stack.pop
         when "CASEBLOCK@@ default : " 
-            is_default_flag=1
-            switch_count=switch_count+1
-            is_switch_statement=1
+            is_default_flag_stack.push(1)
         when "STMT@@ printf ( string , IDS ) "
             string=printbuff.shift.lit_value
             string_array=string.split(/%[dcfu]/)
@@ -290,17 +300,31 @@ def intergen(production)
             string=printbuff.shift.lit_value
             inter_code<<"_printString_ #{string}"
             $PRINTBUF<<string
-
         when "STMT@@ break "
-            break_flag=1
-            inter_code<<"_goto_ _break_label_#{break_label}"
+            break_flag_stack.push(1)
+            break_label_stack.push(break_label_count)
+            inter_code<<"_goto_ _break_label_#{break_label_count}"
+            break_label_count=break_label_count+1
+        when "STMTS@@ WHILESTMT WHILEBLOCK "
+            
+        when "STMTS@@ WHILESTMT WHILEBLOCK STMTS "
+
+        when "WHILESTMT@@ while ( RELEXPR ) "
+            t0=temp.pop
+            inter_code<<"_loop_label_#{loop_count}:"
+            loop_label_stack.push(loop_count)
+            loop_count=loop_count+1
+            inter_code<<"_if_ #{t0} _then"
+        when "WHILEBLOCK@@ { STMTS } "
+      
         end
 
         if x.start_with?("CASESTMTS@@ CASEBLOCK ") or x.start_with?("CASESTMTS@@ CASESTMTS CASEBLOCK ")
-            if is_default_flag==1
-                is_default_flag=0
+            if is_default_flag_stack.pop==1
+                is_default_flag_stack.push(0)
             else
-                inter_code<<"_switch_label_#{switch_count-1}:"
+                is_default_flag_stack.push(0)
+                inter_code<<"_switch_label_#{switch_count_stack.pop}:"
             end
         end
 
