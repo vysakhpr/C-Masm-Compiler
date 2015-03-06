@@ -83,16 +83,33 @@ $grammar=[ "S-> DATATYPE FNAME BLOCK ",
 "SWITCHEXPR-> num ",
 "STMTS-> WHILESTMT WHILEBLOCK ",
 "STMTS-> WHILESTMT WHILEBLOCK STMTS ",
-"WHILESTMT-> while ( RELEXPR ) ",
-"WHILEBLOCK-> { STMTS } "]
+"WHILESTMT-> WHILE ( RELEXPR ) ",
+"WHILE-> while ",
+"WHILEBLOCK-> { STMTS } ",
+"STMTS-> FORSTMT FORBLOCK ",
+"STMTS-> FORSTMT FORBLOCK STMTS ",
+"FORSTMT-> for ( FORCOND ; UPDATEEXPR ) ",
+"FORCOND-> INITEXPR ; RELEXPR ",
+"FORBLOCK-> { STMTS } ",
+"INITEXPR-> ID = EXPR ",
+"UPDATEEXPR-> ID = EXPR ",
+"STMTS-> DO DOBLOCK DOWHILESTMT ",
+"STMTS-> DO DOBLOCK DOWHILESTMT STMTS ",
+"DO-> do ",
+"DOBLOCK-> { STMTS } ",
+"DOWHILESTMT-> while ( RELEXPR ) ; ",
+"STMT-> scanf ( string , AMBIDS ) ",
+"AMBIDS-> AMBID , AMBIDS ",
+"AMBIDS-> & id ",
+"AMBID-> & id "]
 
-$symbols=["S","ID","DATATYPE","EXPR","TERM","FACTOR", "FNAME","NAME","STMT", "IDS" ,"STMTS","id","num","int","char","float","void","main","printf","string","+","*","=","{","}","(",")",";",",","$","epsilon","-","/"]
+$symbols=["S","ID","DATATYPE","EXPR","TERM","FACTOR", "FNAME","NAME","STMT", "IDS" ,"STMTS","id","num","int","char","float","void","main","printf","scanf","string","+","*","=","{","}","(",")",";",",","$","epsilon","-","/"]
 $symbols.concat(["CASEBLOCK","SWITCHSTMT","ELSEIFSTMT","ELSE","IFSTMT","COND","BLOCK","IFBLOCK","ELSEBLOCK","ELSEIFBLOCK","RELEXPR","RELFACTOR","RELTERM","RELNEG","ELSEIF","SWITCHEXPR","SWITCHBLOCK","CASESTMTS","CASESTMT","DEFAULTSTMT","IDNUM","if","else","<",">","!","switch","break","case",":","default","&","|","!"])
-$symbols.concat(["WHILESTMT","WHILEBLOCK","while","for","do"])
-$terminals=["id","num","int","void","char","float","main","printf","string","+","*","=","{","}","(",")",";",",","$","epsilon","-","/"]
+$symbols.concat(["AMBIDS","AMBID","DO","DOBLOCK","DOWHILESTMT","WHILE","WHILESTMT","WHILEBLOCK","FORCOND","FORBLOCK","FORSTMT","INITEXPR","UPDATEEXPR","for","while","do"])
+$terminals=["id","num","int","void","char","float","main","printf","scanf","string","+","*","=","{","}","(",")",";",",","$","epsilon","-","/"]
 $terminals.concat(["if","else","<",">","!","switch","break","case",":","default","&","|","!"])
-$terminals.concat(["while","for","do"])
+$terminals.concat(["for","while","do"])
 $nonterminals=["S","DATATYPE","EXPR","TERM","FACTOR" ,"FNAME","NAME","STMT","IDS","STMTS","ID"]
 $nonterminals.concat(["CASEBLOCK","SWITCHSTMT","ELSEIFSTMT","ELSE","IFSTMT","COND","BLOCK","IFBLOCK","ELSEBLOCK","ELSEIFBLOCK","RELEXPR","RELFACTOR","RELTERM","RELNEG","ELSEIF","SWITCHEXPR","SWITCHBLOCK","CASESTMTS","CASESTMT","DEFAULTSTMT","IDNUM"])
-$nonterminals.concat(["WHILESTMT","WHILEBLOCK"])
+$nonterminals.concat(["AMBIDS","AMBID","DO","DOBLOCK","DOWHILESTMT","WHILE","WHILESTMT","WHILEBLOCK","FORCOND","FORBLOCK","FORSTMT","INITEXPR","UPDATEEXPR"])
 $start="S"

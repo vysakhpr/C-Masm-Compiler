@@ -1,13 +1,17 @@
 void main(){
- 	int a,b;
- 	a=10;
- 	b=15;
- 	while(a<b)
-  	{
-		printf("Haha");
-		break;
-	}
-                
+ 	int a;
+    scanf("%d",&a);
+    printf("%d",a);
+    a=44;
+    printf("%d",a);
+    if (a>5)
+    {
+     printf("The number is greater than five");
+    }
+    else
+    {
+    	printf("The number is less than or equal to five");
+    }
  }
 
 

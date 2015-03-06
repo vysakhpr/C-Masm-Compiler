@@ -12,16 +12,32 @@ def printbuffer(production)
     return printbuff
 end
 
+def scanbuffer(production)
+    literal=$LIT.dup
+    scanbuff=[]
+    for x in production
+        if x.include? " string "
+            l=literal.shift
+            if x.include? " scanf "
+                scanbuff<<l
+            end
+        end
+    end
+    return scanbuff
+end
+
 def intergen(production)
 	number=$NUM.dup
     identifier=$ID.dup
     inter_code=Array.new
     temp=Array.new
     print_var=Array.new
+    scan_var=Array.new
     #fact_value=Array.new
     #term_value=Array.new
     #expr_value=Array.new
     printbuff=printbuffer(production)
+    scanbuff=scanbuffer(production)
     switch_stack=Array.new 
     switch_count=0
     switch_count_stack=Array.new
@@ -33,6 +49,9 @@ def intergen(production)
     loop_label_stack=Array.new
     is_default_flag_stack=Array.new
     is_default_flag_stack.push(0)
+    for_update_variable_stack=Array.new
+    for_update_expression_stack=Array.new
+    for_update_count=0
     loop_stack=Array.new
 	for x in production
         #if x.start_with?("STMT@@")
@@ -41,11 +60,16 @@ def intergen(production)
            #     is_switch_statement=0
             #end
         #end
-        if x.start_with?("STMTS@@ IFSTMT ")
+        if x.start_with?("IFBLOCK@@ ")
             inter_code<<"_end_if_"
         end
+        if x.start_with?("ELSEIFBLOCK@@ ")
+            inter_code<<"_end_elseif_"
+        end
+        if x.start_with?("ELSEBLOCK@@ ")
+            inter_code<<"_end_else_"
+        end
         if x.start_with?("SWITCHBLOCK@@ ")
-            inter_code<<"_end_if_"
             if break_flag_stack.pop==1
                 inter_code<<"_break_label_#{break_label_stack.pop}:"
             else
@@ -231,6 +255,7 @@ def intergen(production)
             t0=temp.pop
             inter_code<<"_else_if_ #{t0} _then"
         when "ELSE@@ else "
+            inter_code<<"_else_ _then"
         when "IFBLOCK@@ { STMTS } "
         when "ELSEIFBLOCK@@ { STMTS } "
         when "ELSEBLOCK@@ { STMTS } "
@@ -276,7 +301,7 @@ def intergen(production)
             $PRINTBUF<<string_array[0]
             for i in  (1..length-1)
                 object=print_var.shift
-                case format.pop
+                case format.shift
                 when "%d"
                     inter_code<<"_printInteger_ #{object.value}" if object.is_number?
                     inter_code<<"_printInteger_ #{object.lex_value}" if object.is_id?
@@ -309,14 +334,88 @@ def intergen(production)
             
         when "STMTS@@ WHILESTMT WHILEBLOCK STMTS "
 
-        when "WHILESTMT@@ while ( RELEXPR ) "
+        when "WHILESTMT@@ WHILE ( RELEXPR ) "
             t0=temp.pop
+            inter_code<<"_if_ #{t0} _then"
+        when "WHILE@@ while "
             inter_code<<"_loop_label_#{loop_count}:"
             loop_label_stack.push(loop_count)
             loop_count=loop_count+1
-            inter_code<<"_if_ #{t0} _then"
         when "WHILEBLOCK@@ { STMTS } "
-      
+
+        when "STMTS@@ FORSTMT FORBLOCK "
+
+        when "STMTS@@ FORSTMT FORBLOCK STMTS "
+
+        when "FORSTMT@@ for ( FORCOND ; UPDATEEXPR ) "
+            
+        when "FORCOND@@ INITEXPR ; RELEXPR "
+            t0=temp.pop            
+            loop_label_stack.push(loop_count)
+            loop_count=loop_count+1
+            inter_code<<"_if_ #{t0} _then"
+        when "FORBLOCK@@ { STMTS } "
+            l=loop_label_stack.pop
+            inter_code<<"#{for_update_variable_stack.pop}=#{for_update_expression_stack.pop}"
+            inter_code<<"_goto_ _loop_label_#{l}"
+            inter_code<<"_end_if_"
+            if break_flag_stack.pop==1
+                inter_code<<"_break_label_#{break_label_stack.pop}:"
+            else
+                break_flag_stack.push(0)
+            end
+        when "INITEXPR@@ ID = EXPR "
+            id_lexeme=id_object.lex_value
+            inter_code<< "#{id_lexeme}=#{temp.pop}";
+            inter_code<<"_loop_label_#{loop_count}:"
+            temp_count=0;
+            print_var=[]
+        when "UPDATEEXPR@@ ID = EXPR "
+            id_lexeme=id_object.lex_value
+            t=temp.pop
+            inter_code<<"_f#{for_update_count}=#{t}"
+            for_update_expression_stack.push("_f#{for_update_count}")
+            for_update_variable_stack.push(id_lexeme)
+            temp_count=0;
+            for_update_count=for_update_count+1
+            print_var=[]
+        when "STMTS@@ DO DOBLOCK DOWHILESTMT "
+        when "STMTS@@ DO DOBLOCK DOWHILESTMT STMTS "
+        when "DO@@ do "
+            inter_code<<"_loop_label_#{loop_count}:"
+            loop_label_stack.push(loop_count)
+            loop_count=loop_count+1
+        when "DOBLOCK@@ { STMTS } "
+
+        when "DOWHILESTMT@@ while ( RELEXPR ) ; "
+            t=temp.pop
+            inter_code<<"_if_ #{t} _then"
+            inter_code<<"_goto_ _loop_label_#{loop_label_stack.pop}:"
+            inter_code<<"-_end_if_"
+        when "STMT@@ scanf ( string , AMBIDS ) "
+            string=scanbuff.shift.lit_value
+            string_array=string.split(/%[dcfu]/)
+            format=string.scan(/%[dcfu]/)
+            length=string_array.length
+            for i in  (1..length-1)
+                object=scan_var.shift
+                case format.shift
+                when "%d"
+                    inter_code<<"_scanInteger_ #{object.lex_value}" if object.is_id?
+                when "%f"
+                    inter_code<<"_scanFloat_ #{object.lex_value}" if object.is_id?
+                when "%c"
+                    inter_code<<"_scanChar_ #{object.lex_value}" if object.is_id?
+                end
+            end
+        
+        when "AMBIDS@@ AMBID , AMBIDS "
+        when "AMBIDS@@ & id "
+            id_object=identifier.shift
+            scan_var.push(id_object)
+        when "AMBID@@ & id "
+            id_object=identifier.shift
+            scan_var.push(id_object)
         end
 
         if x.start_with?("CASESTMTS@@ CASEBLOCK ") or x.start_with?("CASESTMTS@@ CASESTMTS CASEBLOCK ")

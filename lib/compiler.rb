@@ -40,15 +40,15 @@ module Compiler
   file.close;
   words=words.split("\n")
   tokens=scanner(words)
-  puts tokens
+  #puts tokens
   #p $NUM
   #p $ID
   #---------------------------------------------SYNTACTIC-ANALYSIS-----------------------------------------
-  tokens=tokens.split("\n").join(" ");
+  tokens=tokens.split("\n").join(" ");#
   tokens=tokens+" "
   #p tokens
   productions=parser(tokens,generate_parse_table);
-  puts productions
+  #puts productions
   #tree=parse_tree(productions);
 
   #---------------------------------------------SEMANTIC-ANALYSIS-------------------------------------------

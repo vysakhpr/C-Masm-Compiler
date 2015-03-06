@@ -85,7 +85,7 @@ def scanner(words)
           end while !(peek=~/^[A-Za-z0-9_]$/).nil? 
             keyword=["int","float","char","double","long","short","signed","unsigned","void","main","printf"];
             keyword.concat(["if","else","switch","case","default","break"]);
-            keyword.concat(["while","do","for"]);
+            keyword.concat(["scanf","while","do","for"]);
           if keyword.include?(b)
             #indent=b          
             token=token+"#{b}\n"
