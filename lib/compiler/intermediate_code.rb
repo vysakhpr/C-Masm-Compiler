@@ -236,6 +236,8 @@ def intergen(production)
             temp.push("_t#{temp_count}");
             temp_count=0;
         when "RELEXPR@@ RELTERM "
+            #temp_count=0
+        when "RELFACTOR@@ RELNEG"
             temp_count=0
         when "RELTERM@@ RELTERM & & RELFACTOR "
             t1=temp.pop
