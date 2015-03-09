@@ -2,9 +2,29 @@ def codegen(intercode)
     finalcode=Array.new
     data_segment=Array.new
     code_segment=Array.new
+    if_else_trace=Array.new
+    flag=0
+    intercode.each do |code|
+        if !(code=~/^_if_ _t[0-9]+ _then$/).nil?                                            #
+            if_else_trace.push("if")
+        elsif !(code=~/^_if_ _s0$/).nil?
+            if_else_trace.push("if")
+        elsif !(code=~/^_end_if_$/).nil?
+            if_else_trace.push("end_if")
+        elsif !(code=~/^_else_if_ _t[0-9]+ _then$/).nil?
+            if_else_trace.push("else_if")      
+        elsif !(code=~/^_end_elseif_$/).nil?
+            if_else_trace.push("end_else_if")
+        elsif !(code=~/^_else_ _then$/).nil?
+            if_else_trace.push("else")
+        elsif !(code=~/^_end_else/).nil?
+            if_else_trace.push("end_else")
+        end
+    end
+    #print if_else_trace
     finalcode<<"assume cs:code,ds:data"
     dataseg(data_segment)
-    codeseg(code_segment,data_segment,intercode)
+    codeseg(code_segment,data_segment,intercode,if_else_trace)
     finalcode.push(*data_segment)
     finalcode.push(*code_segment)
     return finalcode
@@ -23,8 +43,6 @@ def dataseg(data_segment)
         format=string.scan(/\\[nrt]/)
         length=string_array.length
         split_array=[]
-        p string_array
-        p format
         if format.empty?
             data_segment<<"cmc_msg#{k} db #{string}"
         else
@@ -32,9 +50,7 @@ def dataseg(data_segment)
             for i in  (0..length-1)
                 split_array<<string_array[i]
                 split_array<<format[i] if format[i]!=nil
-            end
-            
-            p split_array   
+            end  
             for x in split_array
                 f=0
                 if !x.empty?
@@ -87,7 +103,7 @@ def dataseg(data_segment)
     end
 end
 
-def codeseg(code_segment,data_segment,intercode)
+def codeseg(code_segment,data_segment,intercode,if_else_trace)
     code_segment<<"code segment"
     code_segment<<"start:"
     code_segment<<"mov dx,data"
@@ -96,10 +112,13 @@ def codeseg(code_segment,data_segment,intercode)
     string_count=0
     rel_expr_count=0
     not_count=0
+    nxt_count=0
     if_count=0
     total_if_count=0
     label_count_for_display=1
     label_count_for_scan=1
+    if_count_stack=Array.new
+    total_if_count_stack=Array.new
     intercode.each do |inter|
         if !(inter=~/^_t[0-9]+=[0-9]+$/).nil?
             eq=inter.index("=")
@@ -117,7 +136,7 @@ def codeseg(code_segment,data_segment,intercode)
                 data_segment<<"cmc#{lvalue} dw 02"
             end
             #print inter
-        elsif !(inter=~/[a-zA-Z][a-zA-Z0-9]*=_t[0-9]+$/).nil?
+        elsif !(inter=~/^[a-zA-Z][a-zA-Z0-9]*=_t[0-9]+$/).nil?
             eq=inter.index("=")
             lvalue=inter[0..eq-1]
             rvalue=inter[eq+1..-1]
@@ -186,20 +205,61 @@ def codeseg(code_segment,data_segment,intercode)
                code_segment<<"mov cmc#{lvalue},ax"
             end      
         #relational expression evaluation(<,<=,>,>=,==,!=)
-        elsif !(inter=~/^_t[0-9]+=_t[0-9]+([<>]|[<>=]=)_t[0-9]+$/).nil?
+        elsif !(inter=~/^_t[0-9]+=_t[0-9]+([<>]|[<>=!]=)_t[0-9]+$/).nil?
+            #print inter
             eq=inter.index('=')
             lvalue=inter[0..eq-1]
             rvalue=inter[eq+1..-1]
-            relop=rvalue.index(/([<>=]|[<>]=)/)
+            relop=rvalue.index(/([<>=]|[<>!]=)/)
             llt=rvalue[0..relop-1]
             rlt=rvalue[relop+1..-1]
-            rlt=rlt.gsub(/([<>=]|[<>]=)/,"")
+            rlt=rlt.gsub(/([<>=]|[<>!]=)/,"")
             code_segment<<"mov ax,cmc#{llt}"
             code_segment<<"mov bx,cmc#{rlt}"
             if !data_segment.include?("cmc#{llt} dw 02")
                 data_segment<<"cmc#{llt} dw 02"
             elsif !data_segment.include?("cmc#{rlt} dw 02")
                 data_segment<<"cmc#{rlt} dw 02"    
+            end          
+            code_segment<<"cmp ax,bx"
+            if rvalue.index(/([>][=])/)
+                code_segment<<"jge cmc_rel#{rel_expr_count}" 
+            elsif rvalue.index(/[>]/)   
+                code_segment<<"jg cmc_rel#{rel_expr_count}"
+            elsif rvalue.index(/[<][=]/)
+                code_segment<<"jle cmc_rel#{rel_expr_count}"
+            elsif rvalue.index(/[<]/)
+                code_segment<<"jl cmc_rel#{rel_expr_count}"
+            elsif rvalue.index(/[=][=]/)
+                code_segment<<"je cmc_rel#{rel_expr_count}"
+            elsif rvalue.index(/[!][=]/)
+                code_segment<<"jne cmc_rel#{rel_expr_count}"          
+            end 
+                code_segment<<"mov cmc#{lvalue},0000h"
+                code_segment<<"jmp cmc_rel#{rel_expr_count+1}"
+                code_segment<<"cmc_rel#{rel_expr_count}:"
+                code_segment<<"mov cmc#{lvalue},0001h"
+                code_segment<<"cmc_rel#{rel_expr_count+1}:"
+                rel_expr_count=rel_expr_count+2
+                if !data_segment.include?("cmc#{lvalue} dw 02")
+                    data_segment<<"cmc#{lvalue} dw 02"
+                    #print "hrk"
+                end
+        elsif !(inter=~/^_s[0-9]+=_t[0-9]+([<>]|[<>=!]=)([a-zA-Z][a-zA-Z0-9_]*)$/).nil?
+            #print inter
+            eq=inter.index('=')
+            lvalue=inter[0..eq-1]
+            rvalue=inter[eq+1..-1]
+            relop=rvalue.index(/([<>=]|[<>!]=)/)
+            llt=rvalue[0..relop-1]
+            rlt=rvalue[relop+1..-1]
+            rlt=rlt.gsub(/([<>=]|[<>!]=)/,"")
+            code_segment<<"mov ax,cmc#{llt}"
+            code_segment<<"mov bx,#{rlt}"
+            if !data_segment.include?("cmc#{llt} dw 02")
+                data_segment<<"cmc#{llt} dw 02"
+            elsif !data_segment.include?("#{rlt} dw 02")
+                data_segment<<"#{rlt} dw 02"    
             end          
             code_segment<<"cmp ax,bx"
             if rvalue.index(/([>][=])/)
@@ -242,51 +302,92 @@ def codeseg(code_segment,data_segment,intercode)
             if !data_segment.include?("cmc_#{rvalue} dw 02")
                 data_segment<<"cmc_#{rvalue} dw 02"                 
             end  
-        #if-elseif-else evaluation-----------------------------------------#
-        elsif !(inter=~/^_if_ _t[0-9]+ _then$/).nil?                         #
-            value=inter[5..-1].gsub(" _then","")                             #
-            code_segment<<"cmp cmc#{value},0001h"                           #
-            code_segment<<"jnge cmc_if#{if_count}"
+        #if-elseif-else evaluation--------------------------------------------------------------#
+        elsif !(inter=~/^_if_ _(t[0-9]+ _then|s0)$/).nil?                                            #
+            #print inter
+            value=inter[5..-1].gsub(" _then","")                                                #
+            code_segment<<"cmp cmc#{value},0001h"
+            code_segment<<"jge cmc_nxt#{nxt_count}"                                             #
+            code_segment<<"jmp cmc_if#{if_count}"
+            code_segment<<"cmc_nxt#{nxt_count}:"
+            nxt_count=nxt_count+1
+            if_count_stack.push(if_count)
+            total_if_count_stack.push(total_if_count)
+            total_if_count=total_if_count+1
+            if_count=if_count+1
+            if_else_trace.shift
             if !data_segment.include?("cmc#{value} dw 02")
                 data_segment<<"cmc#{value} dw 02"
             end
-            #print inter                               #
+            #print inter                                                                        #
         elsif !(inter=~/^_end_if_$/).nil?
-            code_segment<<"jmp cmc#{total_if_count}"                                   #
-            code_segment<<"cmc_if#{if_count}:"
-            if !intercode.include?("_end_else_")
-                code_segment<<"cmc#{total_if_count}:"
-                total_if_count=total_if_count+1
+            code_segment<<"jmp cmc#{total_if_count_stack.last}"                                 #
+            code_segment<<"cmc_if#{if_count_stack.pop}:"
+            if_else_trace.shift
+            if (if_else_trace.first=~/^(else|else_if)$/).nil? || if_else_trace.length==0 
+                code_segment<<"cmc#{total_if_count_stack.pop}:"    
             end
-            if_count=if_count+1
         elsif !(inter=~/^_else_if_ _t[0-9]+ _then$/).nil?
             value=inter[10..-1].gsub(" _then","")
             code_segment<<"cmp cmc#{value},0001h"
-            code_segment<<"jnge cmc_if#{if_count}"
+            code_segment<<"jge cmc_nxt#{nxt_count}"
+            code_segment<<"jmp cmc_if#{if_count}"
+            code_segment<<"cmc_nxt#{nxt_count}:"
+            nxt_count=nxt_count+1
+            if_count_stack.push(if_count)
+            if_count=if_count+1
+            if_else_trace.shift
             if !data_segment.include?("cmc#{value} dw 02")
                 data_segment<<"cmc#{value} dw 02"
-            end                              #
-            #print inter
+            end      
         elsif !(inter=~/^_end_elseif_$/).nil?
-            code_segment<<"jmp cmc#{total_if_count}"                               #
-            code_segment<<"cmc_if#{if_count}:"                                  #
-            if_count=if_count+1
-            if !intercode.include?("_end_else_")
-                code_segment<<"cmc#{total_if_count}:"
-                total_if_count=total_if_count+1
+            code_segment<<"jmp cmc#{total_if_count_stack.last}" 
+            code_segment<<"cmc_if#{if_count_stack.pop}:" 
+            if_else_trace.shift                                         #
+            if (if_else_trace.first=~/^(else|else_if)$/).nil? || if_else_trace.length==0
+                code_segment<<"cmc#{total_if_count_stack.pop}:"
             end
-        elsif !(inter=~/^_end_else/).nil?
-            code_segment<<"cmc#{total_if_count}:"
-            total_if_count=total_if_count+1                                                                                             #
-        #-------------------------------------------------------------------                             
+        elsif !(inter=~/^_else_ _then$/).nil?
+            if_else_trace.shift
+        elsif !(inter=~/^_end_else_$/).nil?
+            if_else_trace.shift
+            code_segment<<"cmc#{total_if_count_stack.pop}:"                                       #
+        #----------------------------------------------------------------------------------------                             
         elsif !(inter=~/^_goto_ _switch_label_[0-9]+$/).nil?
             code_segment<<"jmp cmc#{inter.gsub('_goto_ ','')}"
         elsif !(inter=~/^_goto_ _break_label_[0-9]+$/).nil?
             code_segment<<"jmp cmc#{inter.gsub('_goto_ ','')}"
-        elsif !(inter=~/^_switch_label_[0-9]+:$/).nil?
+        elsif !(inter=~/^_goto_ _loop_label_[0-9]+$/).nil?
+            code_segment<<"jmp cmc#{inter.gsub('_goto_ ','')}"
+        #elsif !(inter=~/^_switch_label_[0-9]+:$/).nil?
+          # code_segment<<"cmc#{inter}"
+        #elsif !(inter=~/^_break_label_[0-9]+:$/).nil?
+          #  code_segment<<"cmc#{inter}"
+        elsif  !(inter=~/:$/).nil?
             code_segment<<"cmc#{inter}"
-        elsif !(inter=~/^_break_label_[0-9]+:$/).nil?
-            code_segment<<"cmc#{inter}"
+        #----------------------for loop---------------------------------------------------------------
+        elsif !(inter=~/^_f0=_t[0-9]+$/).nil? 
+            eq=inter.index('=')
+            lvalue=inter[0..eq-1]
+            rvalue=inter[eq+1..-1]
+            code_segment<<"mov ax,cmc#{rvalue}"
+            code_segment<<"mov cmc_f0,ax"
+            if !data_segment.include?("cmc#{rvalue} dw 02")
+                data_segment<<"cmc#{rvalue} dw 02"
+            elsif !data_segment.include?("cmc_f0 dw 02")
+                data_segment<<"cmc_f0 dw 02"
+            end
+        elsif !(inter=~/^[a-zA-Z][a-zA-Z0-9_]*=_f0$/).nil?
+            eq=inter.index('=')
+            lvalue=inter[0..eq-1]
+            rvalue=inter[eq+1..-1]
+            code_segment<<"mov ax,cmc_f0"
+            code_segment<<"mov #{lvalue},ax"
+            if !data_segment.include?("#{lvalue} dw 02")
+                data_segment<<"#{lvalue} dw 02"
+            elsif !data_segment.include?("cmc_f0 dw 02")
+                data_segment<<"cmc_f0 dw 02"
+            end
         else
             if !(inter=~/^_t[0-9]+=[a-zA-Z0-9][a-zA-Z0-9_]*/).nil?
                 eq=inter.index("=")
@@ -336,7 +437,7 @@ def codeseg(code_segment,data_segment,intercode)
                 code_segment<<"mov dl,al"
                 code_segment<<"int 21h"
             elsif !(inter=~/^_scanInteger_/).nil?
-                code_segment<<"lea si,cmc_in"               
+                code_segment<<"lea si,cmc_in"
                 code_segment<<"mov dl,00h"
                 code_segment<<"ins#{label_count_for_scan}:"
                 code_segment<<"mov ah,01h"
@@ -376,7 +477,6 @@ def codeseg(code_segment,data_segment,intercode)
                 code_segment<<"mov #{inter[11..-1]},al"
             elsif !(inter=~/^_scanFloat_/).nil?
             end
-
         end
     end
     data_segment<<"data ends"

@@ -101,15 +101,30 @@ $grammar=[ "S-> DATATYPE FNAME BLOCK ",
 "STMT-> scanf ( string , AMBIDS ) ",
 "AMBIDS-> AMBID , AMBIDS ",
 "AMBIDS-> & id ",
-"AMBID-> & id "]
-
+"AMBID-> & id ",
+"ID-> PTR [ num ] ",
+"IDS-> PTR [ num ] ",
+"PTR-> id ",
+"FACTOR-> PTR [ num ] ",
+"FACTOR-> PTR [ id ] ",
+"IDNUM-> PTR [ id ] ",
+"IDNUM-> PTR [ num ] ",
+"SWITCHEXPR-> PTR [ id ] ",
+"SWITCHEXPR-> PTR [ num ] ",
+"AMBIDS-> & PTR [ id ] ",
+"AMBIDS-> & PTR [ num ] ",
+"AMBID-> & PTR [ id ] ",
+"AMBID-> & PTR [ num ] "]
 $symbols=["S","ID","DATATYPE","EXPR","TERM","FACTOR", "FNAME","NAME","STMT", "IDS" ,"STMTS","id","num","int","char","float","void","main","printf","scanf","string","+","*","=","{","}","(",")",";",",","$","epsilon","-","/"]
 $symbols.concat(["CASEBLOCK","SWITCHSTMT","ELSEIFSTMT","ELSE","IFSTMT","COND","BLOCK","IFBLOCK","ELSEBLOCK","ELSEIFBLOCK","RELEXPR","RELFACTOR","RELTERM","RELNEG","ELSEIF","SWITCHEXPR","SWITCHBLOCK","CASESTMTS","CASESTMT","DEFAULTSTMT","IDNUM","if","else","<",">","!","switch","break","case",":","default","&","|","!"])
 $symbols.concat(["AMBIDS","AMBID","DO","DOBLOCK","DOWHILESTMT","WHILE","WHILESTMT","WHILEBLOCK","FORCOND","FORBLOCK","FORSTMT","INITEXPR","UPDATEEXPR","for","while","do"])
+$symbols.concat(["PTR","[","]"])
 $terminals=["id","num","int","void","char","float","main","printf","scanf","string","+","*","=","{","}","(",")",";",",","$","epsilon","-","/"]
 $terminals.concat(["if","else","<",">","!","switch","break","case",":","default","&","|","!"])
 $terminals.concat(["for","while","do"])
+$terminals.concat(["[","]"])
 $nonterminals=["S","DATATYPE","EXPR","TERM","FACTOR" ,"FNAME","NAME","STMT","IDS","STMTS","ID"]
 $nonterminals.concat(["CASEBLOCK","SWITCHSTMT","ELSEIFSTMT","ELSE","IFSTMT","COND","BLOCK","IFBLOCK","ELSEBLOCK","ELSEIFBLOCK","RELEXPR","RELFACTOR","RELTERM","RELNEG","ELSEIF","SWITCHEXPR","SWITCHBLOCK","CASESTMTS","CASESTMT","DEFAULTSTMT","IDNUM"])
 $nonterminals.concat(["AMBIDS","AMBID","DO","DOBLOCK","DOWHILESTMT","WHILE","WHILESTMT","WHILEBLOCK","FORCOND","FORBLOCK","FORSTMT","INITEXPR","UPDATEEXPR"])
+$nonterminals.concat(["PTR"])
 $start="S"

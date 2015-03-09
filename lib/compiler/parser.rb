@@ -391,7 +391,36 @@ def parser(z,generate_table)
   #---------------------------------------A@@B--&B@@C---does'nt work-------------------------------------
   g=[]
   for x in $grammar
-    g<<x.gsub("->","@@")
+    x=x.gsub("->","@@")
+    x=x.gsub("[","`")
+    x=x.gsub("]","`")
+    g<<x
+  end
+
+  f=0
+  if $symbols.include?("]")
+    f=1
+    $symbols.delete("]")
+  end
+  if $symbols.include?("[")
+    f=1
+    $symbols.delete("[")
+  end
+  if f==1
+    $symbols<<"`"
+  end
+
+  f=0
+  if $terminals.include?("]")
+    f=1
+    $terminals.delete("]")
+  end
+  if $terminals.include?("[")
+    f=1
+    $terminals.delete("[")
+  end
+  if f==1
+    $terminals<<"`"
   end
   gram_sym=$symbols
   term_sym=$terminals

@@ -40,6 +40,8 @@ module Compiler
   file.close;
   words=words.split("\n")
   tokens=scanner(words)
+  tokens=tokens.gsub("[\nid\n]","`\nid\n`")
+  tokens=tokens.gsub("[\nnum\n]","`\nnum\n`")
   #puts tokens
   #p $NUM
   #p $ID
@@ -55,7 +57,7 @@ module Compiler
   #semantic(productions)
   #----------------------------------------INTERMEDIATE-CODE-GENERATION-------------------------------------
   intermediate_code=intergen(productions)
-  puts intermediate_code
+  #puts intermediate_code
   #p $ID.uniq
   #---------------------------------------------CODE OPTIMIZATION-------------------------------------------
 
@@ -64,13 +66,9 @@ module Compiler
   #puts code
   mode = "w";
   file = File.open("masm/8086/out.asm", mode);
-  #productions.each do |d|
-    #d.each do |c|
   code.each do |c|
    file.write(c);
    file.write("\n")
   end
-  #end
   file.close;
-  #puts $PRINTBUF
 end

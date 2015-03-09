@@ -26,6 +26,18 @@ def scanbuffer(production)
     return scanbuff
 end
 
+def should_enter_in_symbol_table(lexeme)
+    if $ARRAY.nil?
+        return true 
+    end
+    for x in $ARRAY
+        if x.lex_value==lexeme
+            return false
+        end
+    end
+    return true
+end
+
 def intergen(production)
 	number=$NUM.dup
     identifier=$ID.dup
@@ -69,6 +81,18 @@ def intergen(production)
         if x.start_with?("ELSEBLOCK@@ ")
             inter_code<<"_end_else_"
         end
+        if x.start_with?("DO@@ ")
+            break_label_count=break_label_count+1
+        end
+        if x.start_with?("FORSTMT@@ ")
+            break_label_count=break_label_count+1
+        end
+        if x.start_with?("WHILE@@ ")
+            break_label_count=break_label_count+1
+        end
+        if x.start_with?("SWITCHSTMT@@ ")
+            break_label_count=break_label_count+1
+        end
         if x.start_with?("SWITCHBLOCK@@ ")
             if break_flag_stack.pop==1
                 inter_code<<"_break_label_#{break_label_stack.pop}:"
@@ -103,6 +127,7 @@ def intergen(production)
         when "IDS@@ id "
             id_object=identifier.shift
             print_var.push(id_object)
+
         when "IDS@@ ID , IDS "
                     
         when "STMT@@ DATATYPE IDS "
@@ -285,8 +310,8 @@ def intergen(production)
         when "CASEBLOCK@@ case IDNUM : "
             t0=temp.pop
             switch_var=switch_stack.pop
-            inter_code<<"_s=#{t0}!=#{switch_var}"
-            inter_code<<"_if_ _s"
+            inter_code<<"_s0=#{t0}!=#{switch_var}"
+            inter_code<<"_if_ _s0"
             inter_code<<"_goto_ _switch_label_#{switch_count}"
             switch_count_stack.push(switch_count)
             inter_code<<"_end_if_"
@@ -331,7 +356,6 @@ def intergen(production)
             break_flag_stack.push(1)
             break_label_stack.push(break_label_count)
             inter_code<<"_goto_ _break_label_#{break_label_count}"
-            break_label_count=break_label_count+1
         when "STMTS@@ WHILESTMT WHILEBLOCK "
             
         when "STMTS@@ WHILESTMT WHILEBLOCK STMTS "
@@ -418,6 +442,25 @@ def intergen(production)
         when "AMBID@@ & id "
             id_object=identifier.shift
             scan_var.push(id_object)
+        when "ID@@ PTR [ num ] "
+            id_object=identifier.shift
+            num_object=number.shift
+            if should_enter_in_symbol_table(id_object.lex_value)
+                arr=ArrayId.new(id_object.lex_value,num_object.num_value)
+            end
+            print_var.push(id_object)
+        when "IDS@@ PTR [ num ] "
+        when "PTR@@ id "
+        when "FACTOR@@ PTR [ num ] "
+        when "FACTOR@@ PTR [ id ] "
+        when "IDNUM@@ PTR [ id ] "
+        when "IDNUM@@ PTR [ num ] "
+        when "SWITCHEXPR@@ PTR [ id ] "
+        when "SWITCHEXPR@@ PTR [ num ] "
+        when "AMBIDS@@ & PTR [ id ] "
+        when "AMBIDS@@ & PTR [ num ] "
+        when "AMBID@@ & PTR [ id ] "
+        when "AMBID@@ & PTR [ num ] "
         end
 
         if x.start_with?("CASESTMTS@@ CASEBLOCK ") or x.start_with?("CASESTMTS@@ CASESTMTS CASEBLOCK ")

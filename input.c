@@ -1,7 +1,15 @@
-#include<stdio.h>
 void main(){
- 	int a;
- 	printf("\n\nMy name is \r Vysakh and iam a \t good student\n");
+ 	int i;
+        scanf("%d",&i);
+   	if(i>5){
+		printf("Greater than five");
+	}
+  	else if(i<5){
+		printf("Less than five");
+	}
+	else{
+		printf("Equal to five");
+	}
  }
 
 

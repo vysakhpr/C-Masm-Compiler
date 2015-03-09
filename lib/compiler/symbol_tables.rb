@@ -96,9 +96,32 @@ class Literal
   end
 end
 
+class ArrayId
+  @lexeme=nil
+  @length=nil
+  @type=""
+  def initialize(lexeme,length)
+    @lexeme=lexeme
+    @length=length
+  end
+  def lex_value
+    @lexeme
+  end
+  def length
+    @length
+  end
+  def type_value
+    @type
+  end
+  def type_assign(value)
+    @type=value
+  end
+end
+
 
 
 $ID=[];
 $NUM=[];
 $LIT=[];
 $PRINTBUF=[];
+$ARRAY=[]
