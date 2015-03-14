@@ -79,6 +79,7 @@ def intergen(production)
     for_update_variable_stack=Array.new
     for_update_expression_stack=Array.new
     for_update_count=0
+    switch_s_count=0
 
     miscallaneous_stack=Array.new
     loop_stack=Array.new
@@ -117,6 +118,7 @@ def intergen(production)
                 break_flag_stack.push(0)
             end
             switch_stack.pop
+            switch_s_count=switch_s_count-1
         end
         if x.start_with?("WHILEBLOCK@@ ")
             l=loop_label_stack.pop
@@ -324,6 +326,8 @@ def intergen(production)
         when "SWITCHSTMT@@ switch ( SWITCHEXPR ) " 
             switch_var=switch_stack.pop
             switch_stack.push(switch_var)
+            switch_s_count=switch_s_count+1
+            inter_code<<"_s#{switch_s_count}=1"
         when "IDNUM@@ num "
             num_object=number.shift
             inter_code<< "_t#{temp_count}=#{num_object.value}";
@@ -339,10 +343,12 @@ def intergen(production)
             t0=temp.pop
             switch_var=switch_stack.pop
             inter_code<<"_s0=#{t0}!=#{switch_var}"
+            inter_code<<"_s0=_s0&&_s#{switch_s_count}"
             inter_code<<"_if_ _s0"
             inter_code<<"_goto_ _switch_label_#{switch_count}"
             switch_count_stack.push(switch_count)
             inter_code<<"_end_if_"
+            inter_code<<"_s#{switch_s_count}=0"
             switch_count=switch_count+1
             switch_stack.push(switch_var)
         when "CASEBLOCK@@ default : " 
