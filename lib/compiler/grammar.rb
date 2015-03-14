@@ -133,15 +133,16 @@ $grammar=[ "S-> DATATYPE FNAME BLOCK ",
 "FACTOR-> charlit ",
 "SWITCHEXPR-> charlit ",
 "DECLIDS-> id = num ",
-"DECLID-> id = num "]
+"DECLID-> id = num ",
+"STMT-> continue "]
 $symbols=["S","PRINTIDS","PRINTID","ID","DATATYPE","DECLIDS","DECLID","EXPR","TERM","FACTOR", "FNAME","NAME","STMT" ,"STMTS","id","num","int","char","float","void","main","printf","scanf","string","+","*","=","{","}","(",")",";",",","$","epsilon","-","/","%"]
 $symbols.concat(["CASEBLOCK","SWITCHSTMT","ELSEIFSTMT","ELSE","IFSTMT","COND","BLOCK","IFBLOCK","ELSEBLOCK","ELSEIFBLOCK","RELEXPR","RELFACTOR","RELTERM","RELNEG","ELSEIF","SWITCHEXPR","SWITCHBLOCK","CASESTMTS","CASESTMT","DEFAULTSTMT","IDNUM","if","else","<",">","!","switch","break","case",":","default","&","|","!"])
 $symbols.concat(["AMBIDS","AMBID","DO","DOBLOCK","DOWHILESTMT","WHILE","WHILESTMT","WHILEBLOCK","FORCOND","FORBLOCK","FORSTMT","INITEXPR","UPDATEEXPR","for","while","do"])
-$symbols.concat(["INDEXPR","INDTERM","INDFACTOR","PTR","[","]","charlit"])
+$symbols.concat(["INDEXPR","INDTERM","INDFACTOR","PTR","[","]","charlit","continue"])
 $terminals=["id","num","int","void","char","float","main","printf","scanf","string","+","*","=","{","}","(",")",";",",","$","epsilon","-","/","%"]
 $terminals.concat(["if","else","<",">","!","switch","break","case",":","default","&","|","!"])
 $terminals.concat(["for","while","do"])
-$terminals.concat(["[","]","charlit"])
+$terminals.concat(["[","]","charlit","continue"])
 $nonterminals=["S","PRINTIDS","PRINTID","DATATYPE","DECLIDS","DECLID","EXPR","TERM","FACTOR" ,"FNAME","NAME","STMT","STMTS","ID"]
 $nonterminals.concat(["CASEBLOCK","SWITCHSTMT","ELSEIFSTMT","ELSE","IFSTMT","COND","BLOCK","IFBLOCK","ELSEBLOCK","ELSEIFBLOCK","RELEXPR","RELFACTOR","RELTERM","RELNEG","ELSEIF","SWITCHEXPR","SWITCHBLOCK","CASESTMTS","CASESTMT","DEFAULTSTMT","IDNUM"])
 $nonterminals.concat(["AMBIDS","AMBID","DO","DOBLOCK","DOWHILESTMT","WHILE","WHILESTMT","WHILEBLOCK","FORCOND","FORBLOCK","FORSTMT","INITEXPR","UPDATEEXPR"])

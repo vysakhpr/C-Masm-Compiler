@@ -619,6 +619,10 @@ def intergen(production)
             num_object=number.shift
             inter_code<<"_t0=#{num_object.num_value}"
             inter_code<<"#{id_object.lex_value}=_t0"
+        when "STMT@@ continue "
+            l=loop_label_stack.pop
+            inter_code<<"_goto_ _loop_label_#{l}"
+            loop_label_stack.push(l)
         end
 
         if x.start_with?("CASESTMTS@@ CASEBLOCK ") or x.start_with?("CASESTMTS@@ CASESTMTS CASEBLOCK ")
