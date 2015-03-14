@@ -50,6 +50,9 @@ class Identifier
   def is_number?
     false
   end
+  def is_array?
+    false
+  end
 end
 
 class Number
@@ -77,6 +80,9 @@ class Number
     true
   end
   def is_id?
+    false
+  end
+  def is_array?
     false
   end
 end
@@ -115,6 +121,15 @@ class ArrayId
   end
   def type_assign(value)
     @type=value
+  end
+  def is_id?
+    false
+  end
+  def is_number?
+    false
+  end
+  def is_array?
+    true
   end
 end
 

@@ -196,6 +196,7 @@ def table(g, table_action_sym, table_goto_sym, gram_sym, start_sym)
       a=k[/^[A-Z]+@@/]
       a=a.gsub("@@","")
       #unless a == "SS"
+      #puts l
         j=g.index(l)
         #puts j
         for m in followof(a, table_action_sym, table_goto_sym,g)
@@ -501,6 +502,7 @@ def parser(z,generate_table)
         $goto_table<<word
     end
   end
+
   
   return parse(z,term_sym,non_term_sym,g)
   #print followof("EXPR",term_sym, non_term_sym,g)

@@ -26,6 +26,15 @@ def scanbuffer(production)
     return scanbuff
 end
 
+def findArrayObject(lexeme)
+    for x in $ARRAY
+        if x.lex_value==lexeme
+            return x
+        end
+    end
+    return -1
+end
+
 def should_enter_in_symbol_table(lexeme)
     if $ARRAY.nil?
         return true 
@@ -43,8 +52,13 @@ def intergen(production)
     identifier=$ID.dup
     inter_code=Array.new
     temp=Array.new
+    index_temp=Array.new
     print_var=Array.new
+    print_var_index=Array.new
     scan_var=Array.new
+    temp_count=0;
+    index_temp_count=0;
+    array_name_stack=Array.new
     #fact_value=Array.new
     #term_value=Array.new
     #expr_value=Array.new
@@ -64,6 +78,8 @@ def intergen(production)
     for_update_variable_stack=Array.new
     for_update_expression_stack=Array.new
     for_update_count=0
+
+    miscallaneous_stack=Array.new
     loop_stack=Array.new
 	for x in production
         #if x.start_with?("STMT@@")
@@ -113,7 +129,7 @@ def intergen(production)
         end
         case x
         when "NAME@@ main "
-            temp_count=0;
+
         when "FNAME@@ NAME ( ) "
             
         when "DATATYPE@@ char "
@@ -123,17 +139,23 @@ def intergen(production)
         when "DATATYPE@@ int "
 
         when "DATATYPE@@ float " 
-            
-        when "IDS@@ id "
+
+        when "DECLIDS@@ id "
+            identifier.shift
+        when "DECLID@@ id "
+            identifier.shift
+        when "PRINTIDS@@ id "
             id_object=identifier.shift
             print_var.push(id_object)
-
         when "IDS@@ ID , IDS "
                     
         when "STMT@@ DATATYPE IDS "
-            print_var=[]
+            
         when "ID@@ id "
         	id_object=identifier.shift
+            miscallaneous_stack.push(id_object.lex_value)
+        when "PRINTID@@ id "
+            id_object=identifier.shift
             print_var.push(id_object)
         when "FACTOR@@ num "
             num_object=number.shift
@@ -169,6 +191,12 @@ def intergen(production)
             inter_code<< "_t#{temp_count}=#{t0}/#{t1}";
             temp.push("_t#{temp_count}");
             temp_count=temp_count+1;
+        when "TERM@@ TERM % FACTOR "
+            t1=temp.pop
+            t0=temp.pop
+            inter_code<< "_t#{temp_count}=#{t0}%#{t1}";
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1;
         when "TERM@@ TERM * FACTOR "
             t1=temp.pop
             t0=temp.pop
@@ -176,10 +204,9 @@ def intergen(production)
             temp.push("_t#{temp_count}");
             temp_count=temp_count+1;
         when "FACTOR@@ ( EXPR ) "
-        	fact_value.push(expr_value.pop)
-        when "STMT@@ ID = EXPR "
-        	id_lexeme=id_object.lex_value
-            inter_code<< "#{id_lexeme}=#{temp.pop}";
+        	#fact_value.push(expr_value.pop)
+        when "STMT@@ ID = RELEXPR "
+            inter_code<< "#{miscallaneous_stack.pop}=#{temp.pop}";
             temp_count=0;
             print_var=[]
         when "RELNEG@@ RELNEG < RELNEG "
@@ -319,7 +346,7 @@ def intergen(production)
             switch_stack.push(switch_var)
         when "CASEBLOCK@@ default : " 
             is_default_flag_stack.push(1)
-        when "STMT@@ printf ( string , IDS ) "
+        when "STMT@@ printf ( string , PRINTIDS ) "
             string=printbuff.shift.lit_value
             string_array=string.split(/%[dcfu]/)
             format=string.scan(/%[dcfu]/)
@@ -332,12 +359,15 @@ def intergen(production)
                 when "%d"
                     inter_code<<"_printInteger_ #{object.value}" if object.is_number?
                     inter_code<<"_printInteger_ #{object.lex_value}" if object.is_id?
+                    inter_code<<"_printIntArray_ #{object.lex_value} _index_ #{index_temp.pop}"if object.is_array?
                 when "%f"
                     inter_code<<"_printFloat_ #{object.value}" if object.is_number?
                     inter_code<<"_printFloat_ #{object.lex_value}" if object.is_id?
+                    inter_code<<"_printFloatArray_ #{object.lex_value} _index_ #{index_temp.pop}"if object.is_array?
                 when "%c"
                     inter_code<<"_printChar_ #{object.value}" if object.is_number?
                     inter_code<<"_printChar_ #{object.lex_value}" if object.is_id?
+                    inter_code<<"_printCharArray_ #{object.lex_value} _index_ #{index_temp.pop}"if object.is_array?
                 end
                 if i!=length-1
                     inter_code<<"_printString_ \"#{string_array[i]}\"" 
@@ -391,13 +421,12 @@ def intergen(production)
                 break_flag_stack.push(0)
             end
         when "INITEXPR@@ ID = EXPR "
-            id_lexeme=id_object.lex_value
-            inter_code<< "#{id_lexeme}=#{temp.pop}";
+            inter_code<< "#{miscallaneous_stack.pop}=#{temp.pop}";
             inter_code<<"_loop_label_#{loop_count}:"
             temp_count=0;
             print_var=[]
         when "UPDATEEXPR@@ ID = EXPR "
-            id_lexeme=id_object.lex_value
+            id_lexeme=miscallaneous_stack.pop
             t=temp.pop
             inter_code<<"_f#{for_update_count}=#{t}"
             for_update_expression_stack.push("_f#{for_update_count}")
@@ -416,8 +445,8 @@ def intergen(production)
         when "DOWHILESTMT@@ while ( RELEXPR ) ; "
             t=temp.pop
             inter_code<<"_if_ #{t} _then"
-            inter_code<<"_goto_ _loop_label_#{loop_label_stack.pop}:"
-            inter_code<<"-_end_if_"
+            inter_code<<"_goto_ _loop_label_#{loop_label_stack.pop}"
+            inter_code<<"_end_if_"
         when "STMT@@ scanf ( string , AMBIDS ) "
             string=scanbuff.shift.lit_value
             string_array=string.split(/%[dcfu]/)
@@ -428,10 +457,13 @@ def intergen(production)
                 case format.shift
                 when "%d"
                     inter_code<<"_scanInteger_ #{object.lex_value}" if object.is_id?
+                    inter_code<<"_scanIntArray_ #{object.lex_value} _index_ #{index_temp.pop}"if object.is_array?
                 when "%f"
                     inter_code<<"_scanFloat_ #{object.lex_value}" if object.is_id?
+                    inter_code<<"_scanFloatArray_ #{object.lex_value} _index_ #{index_temp.pop}"if object.is_array?
                 when "%c"
                     inter_code<<"_scanChar_ #{object.lex_value}" if object.is_id?
+                    inter_code<<"_scanCharArray_ #{object.lex_value} _index_ #{index_temp.pop}"if object.is_array?
                 end
             end
         
@@ -442,25 +474,125 @@ def intergen(production)
         when "AMBID@@ & id "
             id_object=identifier.shift
             scan_var.push(id_object)
-        when "ID@@ PTR [ num ] "
-            id_object=identifier.shift
-            num_object=number.shift
-            if should_enter_in_symbol_table(id_object.lex_value)
-                arr=ArrayId.new(id_object.lex_value,num_object.num_value)
-            end
-            print_var.push(id_object)
-        when "IDS@@ PTR [ num ] "
+#-------------------------------------------------------------------------------------------------------------------------------------
+       
         when "PTR@@ id "
-        when "FACTOR@@ PTR [ num ] "
-        when "FACTOR@@ PTR [ id ] "
-        when "IDNUM@@ PTR [ id ] "
-        when "IDNUM@@ PTR [ num ] "
-        when "SWITCHEXPR@@ PTR [ id ] "
-        when "SWITCHEXPR@@ PTR [ num ] "
-        when "AMBIDS@@ & PTR [ id ] "
-        when "AMBIDS@@ & PTR [ num ] "
-        when "AMBID@@ & PTR [ id ] "
-        when "AMBID@@ & PTR [ num ] "
+            array_name_stack.push(identifier.shift)
+        when "INDEXPR@@ INDEXPR + INDTERM "
+            i1=index_temp.pop
+            i0=index_temp.pop
+            inter_code<< "_i#{index_temp_count}=#{i0}+#{i1}";
+            index_temp.push("_i#{index_temp_count}");
+            index_temp_count=index_temp_count+1;
+        when "INDEXPR@@ INDEXPR - INDTERM "
+            i1=index_temp.pop
+            i0=index_temp.pop
+            inter_code<< "_i#{index_temp_count}=#{i0}-#{i1}";
+            index_temp.push("_i#{index_temp_count}");
+            index_temp_count=index_temp_count+1;
+        when "INDEXPR@@ INDTERM "
+        when "INDTERM@@ INDTERM / INDFACTOR "
+            i1=index_temp.pop
+            i0=index_temp.pop
+            inter_code<< "_i#{index_temp_count}=#{i0}/#{i1}";
+            index_temp.push("_i#{index_temp_count}");
+            index_temp_count=index_temp_count+1;
+        when "INDTERM@@ INDTERM % INDFACTOR "
+            i1=index_temp.pop
+            i0=index_temp.pop
+            inter_code<< "_i#{index_temp_count}=#{i0}%#{i1}";
+            index_temp.push("_i#{index_temp_count}");
+            index_temp_count=index_temp_count+1;
+        when "INDTERM@@ INDTERM * INDFACTOR "
+            i1=index_temp.pop
+            i0=index_temp.pop
+            inter_code<< "_i#{index_temp_count}=#{i0}*#{i1}";
+            index_temp.push("_i#{index_temp_count}");
+            index_temp_count=index_temp_count+1;
+        when "INDTERM@@ INDFACTOR "
+        when "INDFACTOR@@ ( INDEXPR ) "
+        when "INDFACTOR@@ id "
+            ids_object=identifier.shift;
+            inter_code<< "_i#{index_temp_count}=#{ids_object.lex_value}";
+            index_temp.push("_i#{index_temp_count}");
+            index_temp_count=index_temp_count+1;
+        when "INDFACTOR@@ num "
+            num_object=number.shift
+            inter_code<< "_i#{index_temp_count}=#{num_object.value}";
+            index_temp.push("_i#{index_temp_count}");
+            index_temp_count=index_temp_count+1;
+        when "DECLIDS@@ PTR ` num ` "
+            num_object=number.shift
+            id_lexeme=(array_name_stack.pop()).lex_value
+            if should_enter_in_symbol_table(id_lexeme)
+                $ARRAY<<ArrayId.new(id_lexeme,num_object.num_value)
+            end
+        when "DECLID@@ PTR ` num ` "
+            num_object=number.shift
+            id_lexeme=(array_name_stack.pop()).lex_value
+            if should_enter_in_symbol_table(id_lexeme)
+                $ARRAY<<ArrayId.new(id_lexeme,num_object.num_value)
+            end
+        when "ID@@ PTR ` INDEXPR ` "
+            id_lexeme=(array_name_stack.pop()).lex_value
+            miscallaneous_stack.push("_getarray_ #{id_lexeme} _index_ #{index_temp.pop}")
+            index_temp_count=0;
+        when "FACTOR@@ PTR ` INDEXPR ` "
+            id_lexeme=(array_name_stack.pop()).lex_value
+            inter_code<< "_t#{temp_count}=_getarray_ #{id_lexeme} _index_ #{index_temp.pop}"
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1;
+            index_temp_count=0;
+        when "AMBIDS@@ & PTR ` INDEXPR ` "
+            id_lexeme=(array_name_stack.pop()).lex_value
+            y=findArrayObject(id_lexeme)
+            if y==-1
+                puts "***********************************************ERROR***********************************************"
+                return
+            else
+                scan_var.push(y)
+            end
+            index_temp_count=0;
+        when "AMBID@@ & PTR ` INDEXPR ` "
+            id_lexeme=(array_name_stack.pop()).lex_value
+            y=findArrayObject(id_lexeme)
+            if y==-1
+                puts "***********************************************ERROR***********************************************"
+                return
+            else
+                scan_var.push(y)
+            end
+            index_temp_count=0;
+        when "PRINTIDS@@ PTR ` INDEXPR ` "
+            id_lexeme=(array_name_stack.pop()).lex_value
+            y=findArrayObject(id_lexeme)
+            if y==-1
+                puts "***********************************************ERROR***********************************************"
+                return
+            else
+                print_var.push(y)
+            end
+            index_temp_count=0;
+        when "PRINTID@@ PTR ` INDEXPR ` "
+            id_lexeme=(array_name_stack.pop()).lex_value
+            y=findArrayObject(id_lexeme)
+            if y==-1
+                puts "***********************************************ERROR***********************************************"
+                return
+            else
+                print_var.push(y)
+            end
+            index_temp_count=0;
+        when "IDNUM@@ PTR ` INDEXPR ` "
+            id_lexeme=(array_name_stack.pop()).lex_value
+            inter_code<< "_t#{temp_count}=_getarray_ #{id_lexeme} _index_ #{index_temp.pop}";
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1;
+            index_temp_count=0;
+        when "SWITCHEXPR@@ PTR ` INDEXPR ` "
+            id_lexeme=(array_name_stack.pop()).lex_value
+            switch_stack.push("_getarray_ #{id_lexeme} _index_ #{index_temp.pop}");
+            index_temp_count=0;
         end
 
         if x.start_with?("CASESTMTS@@ CASEBLOCK ") or x.start_with?("CASESTMTS@@ CASESTMTS CASEBLOCK ")

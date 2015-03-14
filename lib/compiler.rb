@@ -40,24 +40,24 @@ module Compiler
   file.close;
   words=words.split("\n")
   tokens=scanner(words)
-  tokens=tokens.gsub("[\nid\n]","`\nid\n`")
-  tokens=tokens.gsub("[\nnum\n]","`\nnum\n`")
+  tokens=tokens.gsub("[","`")
+  tokens=tokens.gsub("]","`")
   #puts tokens
   #p $NUM
   #p $ID
   #---------------------------------------------SYNTACTIC-ANALYSIS-----------------------------------------
   tokens=tokens.split("\n").join(" ");#
   tokens=tokens+" "
-  #p tokens
+  p tokens
   productions=parser(tokens,generate_parse_table);
-  #puts productions
+  puts productions
   #tree=parse_tree(productions);
 
   #---------------------------------------------SEMANTIC-ANALYSIS-------------------------------------------
   #semantic(productions)
   #----------------------------------------INTERMEDIATE-CODE-GENERATION-------------------------------------
   intermediate_code=intergen(productions)
-  #puts intermediate_code
+  puts intermediate_code
   #p $ID.uniq
   #---------------------------------------------CODE OPTIMIZATION-------------------------------------------
 

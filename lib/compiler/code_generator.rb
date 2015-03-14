@@ -147,7 +147,7 @@ def codeseg(code_segment,data_segment,intercode,if_else_trace)
             end
             code_segment<<"mov ax,cmc#{rvalue}"
             code_segment<<"mov #{lvalue},ax"
-        elsif !(inter=~/_t[0-9]+=_t[0-9]+[*+-]_t[0-9]+/).nil?
+        elsif !(inter=~/_t[0-9]+=_t[0-9]+[*+-\/%]_t[0-9]+/).nil?
              #puts inter
              eq=inter.index('=')
              lvalue=inter[0..eq-1]
@@ -173,6 +173,22 @@ def codeseg(code_segment,data_segment,intercode,if_else_trace)
                 code_segment<<"mov bx,cmc#{second_rvalue}"
                 code_segment<<"mul bx"
                 code_segment<<"mov cmc#{lvalue},ax" 
+            elsif rq=rvalue.index("/")
+                first_rvalue=rvalue[0..rq-1]
+                second_rvalue=rvalue[rq+1..-1]
+                code_segment<<"mov ax,cmc#{first_rvalue}"
+                code_segment<<"mov bx,cmc#{second_rvalue}"
+                code_segment<<"mov dx,0000h"
+                code_segment<<"div bx"
+                code_segment<<"mov cmc#{lvalue},ax"
+            elsif rq=rvalue.index("%")
+                first_rvalue=rvalue[0..rq-1]
+                second_rvalue=rvalue[rq+1..-1]
+                code_segment<<"mov ax,cmc#{first_rvalue}"
+                code_segment<<"mov bx,cmc#{second_rvalue}"
+                code_segment<<"mov dx,0000h"
+                code_segment<<"div bx"
+                code_segment<<"mov cmc#{lvalue},dx"
              end
             if !data_segment.include?("cmc#{first_rvalue} dw 02")
                 data_segment<<"cmc#{first_rvalue} dw 02"

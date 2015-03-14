@@ -1,21 +1,26 @@
 $grammar=[ "S-> DATATYPE FNAME BLOCK ",
 "STMTS-> STMT ; STMTS ",
 "STMTS-> STMT ; ",
-"STMT-> DATATYPE IDS ",
-"STMT-> ID = EXPR ",
-"STMT-> printf ( string , IDS ) ",
+"STMT-> DATATYPE DECLIDS ",
+"STMT-> ID = RELEXPR ",
+"STMT-> printf ( string , PRINTIDS ) ",
 "STMT-> printf ( string ) ",
 "EXPR-> EXPR + TERM ",
 "EXPR-> EXPR - TERM ",
 "EXPR-> TERM ",
 "TERM-> TERM / FACTOR ",
 "TERM-> TERM * FACTOR ",
+"TERM-> TERM % FACTOR ",
 "TERM-> FACTOR ",
 "FACTOR-> ( EXPR ) ",
 "FACTOR-> id ",
 "FACTOR-> num ",
-"IDS-> ID , IDS ",
-"IDS-> id ",
+"DECLIDS-> DECLID , DECLIDS ",
+"DECLIDS-> id ",
+"DECLID-> id ",
+"PRINTIDS-> PRINTID , PRINTIDS ",
+"PRINTIDS-> id ",
+"PRINTID-> id ",
 "DATATYPE-> int ",
 "DATATYPE-> float ",
 "DATATYPE-> void ",
@@ -102,29 +107,38 @@ $grammar=[ "S-> DATATYPE FNAME BLOCK ",
 "AMBIDS-> AMBID , AMBIDS ",
 "AMBIDS-> & id ",
 "AMBID-> & id ",
-"ID-> PTR [ num ] ",
-"IDS-> PTR [ num ] ",
 "PTR-> id ",
-"FACTOR-> PTR [ num ] ",
-"FACTOR-> PTR [ id ] ",
-"IDNUM-> PTR [ id ] ",
-"IDNUM-> PTR [ num ] ",
-"SWITCHEXPR-> PTR [ id ] ",
-"SWITCHEXPR-> PTR [ num ] ",
-"AMBIDS-> & PTR [ id ] ",
-"AMBIDS-> & PTR [ num ] ",
-"AMBID-> & PTR [ id ] ",
-"AMBID-> & PTR [ num ] "]
-$symbols=["S","ID","DATATYPE","EXPR","TERM","FACTOR", "FNAME","NAME","STMT", "IDS" ,"STMTS","id","num","int","char","float","void","main","printf","scanf","string","+","*","=","{","}","(",")",";",",","$","epsilon","-","/"]
+"INDEXPR-> INDEXPR + INDTERM ",
+"INDEXPR-> INDEXPR - INDTERM ",
+"INDEXPR-> INDTERM ",
+"INDTERM-> INDTERM / INDFACTOR ",
+"INDTERM-> INDTERM % INDFACTOR ",
+"INDTERM-> INDTERM * INDFACTOR ",
+"INDTERM-> INDFACTOR ",
+"INDFACTOR-> ( INDEXPR ) ",
+"INDFACTOR-> id ",
+"INDFACTOR-> num ",
+"DECLIDS-> PTR [ num ] ",
+"DECLID-> PTR [ num ] ",
+"ID-> PTR [ INDEXPR ] ",
+"FACTOR-> PTR [ INDEXPR ] ",
+"AMBIDS-> & PTR [ INDEXPR ] ",
+"AMBID-> & PTR [ INDEXPR ] ",
+"PRINTIDS-> PTR [ INDEXPR ] ",
+"PRINTID-> PTR [ INDEXPR ] ",
+"IDNUM-> PTR [ INDEXPR ] ",
+"SWITCHEXPR-> PTR [ INDEXPR ] ",
+"INDFACTOR-> ( INDEXPR ) "]
+$symbols=["S","PRINTIDS","PRINTID","ID","DATATYPE","DECLIDS","DECLID","EXPR","TERM","FACTOR", "FNAME","NAME","STMT" ,"STMTS","id","num","int","char","float","void","main","printf","scanf","string","+","*","=","{","}","(",")",";",",","$","epsilon","-","/","%"]
 $symbols.concat(["CASEBLOCK","SWITCHSTMT","ELSEIFSTMT","ELSE","IFSTMT","COND","BLOCK","IFBLOCK","ELSEBLOCK","ELSEIFBLOCK","RELEXPR","RELFACTOR","RELTERM","RELNEG","ELSEIF","SWITCHEXPR","SWITCHBLOCK","CASESTMTS","CASESTMT","DEFAULTSTMT","IDNUM","if","else","<",">","!","switch","break","case",":","default","&","|","!"])
 $symbols.concat(["AMBIDS","AMBID","DO","DOBLOCK","DOWHILESTMT","WHILE","WHILESTMT","WHILEBLOCK","FORCOND","FORBLOCK","FORSTMT","INITEXPR","UPDATEEXPR","for","while","do"])
-$symbols.concat(["PTR","[","]"])
-$terminals=["id","num","int","void","char","float","main","printf","scanf","string","+","*","=","{","}","(",")",";",",","$","epsilon","-","/"]
+$symbols.concat(["INDEXPR","INDTERM","INDFACTOR","PTR","[","]"])
+$terminals=["id","num","int","void","char","float","main","printf","scanf","string","+","*","=","{","}","(",")",";",",","$","epsilon","-","/","%"]
 $terminals.concat(["if","else","<",">","!","switch","break","case",":","default","&","|","!"])
 $terminals.concat(["for","while","do"])
 $terminals.concat(["[","]"])
-$nonterminals=["S","DATATYPE","EXPR","TERM","FACTOR" ,"FNAME","NAME","STMT","IDS","STMTS","ID"]
+$nonterminals=["S","PRINTIDS","PRINTID","DATATYPE","DECLIDS","DECLID","EXPR","TERM","FACTOR" ,"FNAME","NAME","STMT","STMTS","ID"]
 $nonterminals.concat(["CASEBLOCK","SWITCHSTMT","ELSEIFSTMT","ELSE","IFSTMT","COND","BLOCK","IFBLOCK","ELSEBLOCK","ELSEIFBLOCK","RELEXPR","RELFACTOR","RELTERM","RELNEG","ELSEIF","SWITCHEXPR","SWITCHBLOCK","CASESTMTS","CASESTMT","DEFAULTSTMT","IDNUM"])
 $nonterminals.concat(["AMBIDS","AMBID","DO","DOBLOCK","DOWHILESTMT","WHILE","WHILESTMT","WHILEBLOCK","FORCOND","FORBLOCK","FORSTMT","INITEXPR","UPDATEEXPR"])
-$nonterminals.concat(["PTR"])
+$nonterminals.concat(["INDEXPR","INDTERM","INDFACTOR","PTR"])
 $start="S"
