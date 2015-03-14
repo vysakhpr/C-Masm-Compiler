@@ -87,7 +87,22 @@ class Number
   end
 end
 
-class Literal
+class StringLiteral
+  @value=nil
+  @line=nil
+  def initialize(value,line)
+    @value=value
+    @line=line
+  end
+  def lit_value
+    @value
+  end
+  def line_value
+    @line
+  end
+end
+
+class CharacterLiteral
   @value=nil
   @line=nil
   def initialize(value,line)
@@ -138,5 +153,6 @@ end
 $ID=[];
 $NUM=[];
 $LIT=[];
+$CHARLIT=[];
 $PRINTBUF=[];
 $ARRAY=[]

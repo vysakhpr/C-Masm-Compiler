@@ -3,7 +3,7 @@ def scanner(words)
   delim=0                                                                 #
   paran=0 
   e=0  
-  #p words
+  p words
   #Scanning Phase-----------------------------------------------------------------------------------------------------------------------------------------
   
   lexem_id={};
@@ -37,7 +37,7 @@ def scanner(words)
     end 
   end
 
-  #p words
+  p words
   line=1  
  #LexicalAnalysis Phase-----------------------------------------------------------------------------------------------------------------------------------  
   for word in words
@@ -138,12 +138,30 @@ def scanner(words)
               end
             end
           end
-          ob=Literal.new(b,line)
+          ob=StringLiteral.new(b,line)
           token=token+"string\n"
           $LIT<<ob
           i=i+1
           next
         #end
+  #<!----------------Character Constant-----------------------------------------!>
+        elsif peek=="'"
+            if word[i+2]!="'"
+              puts "Lexical Error: Invalid Character Constant"
+              e=1
+            end
+            i=i+1
+            b="'"
+            b=b+word[i]
+            b=b+"'"
+            i=i+1
+            ob=CharacterLiteral.new(b,line)
+            token=token+"charlit\n"
+            $CHARLIT<<ob
+            i=i+1
+            next
+
+
   #<!----------------Panic Mode ------------------------------------------------!>
 
         else

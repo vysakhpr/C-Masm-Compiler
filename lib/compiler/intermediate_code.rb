@@ -50,6 +50,7 @@ end
 def intergen(production)
 	number=$NUM.dup
     identifier=$ID.dup
+    charliteral=$CHARLIT.dup
     inter_code=Array.new
     temp=Array.new
     index_temp=Array.new
@@ -357,6 +358,7 @@ def intergen(production)
                 object=print_var.shift
                 case format.shift
                 when "%d"
+#---------------------------------------------------------------------------------------------------------Change here
                     inter_code<<"_printInteger_ #{object.value}" if object.is_number?
                     inter_code<<"_printInteger_ #{object.lex_value}" if object.is_id?
                     inter_code<<"_printIntArray_ #{object.lex_value} _index_ #{index_temp.pop}"if object.is_array?
@@ -456,6 +458,7 @@ def intergen(production)
                 object=scan_var.shift
                 case format.shift
                 when "%d"
+#---------------------------------------------------------------------------------------------------------Change here                    
                     inter_code<<"_scanInteger_ #{object.lex_value}" if object.is_id?
                     inter_code<<"_scanIntArray_ #{object.lex_value} _index_ #{index_temp.pop}"if object.is_array?
                 when "%f"
@@ -474,7 +477,7 @@ def intergen(production)
         when "AMBID@@ & id "
             id_object=identifier.shift
             scan_var.push(id_object)
-#-------------------------------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------------------------------change here
        
         when "PTR@@ id "
             array_name_stack.push(identifier.shift)
@@ -593,6 +596,14 @@ def intergen(production)
             id_lexeme=(array_name_stack.pop()).lex_value
             switch_stack.push("_getarray_ #{id_lexeme} _index_ #{index_temp.pop}");
             index_temp_count=0;
+        when "FACTOR@@ charlit "
+            char_object=charliteral.shift;
+            inter_code<< "_t#{temp_count}=#{char_object.lit_value}";
+            temp.push("_t#{temp_count}");
+            temp_count=temp_count+1;
+        when "SWITCHEXPR@@ charlit "
+            char_object=charliteral.shift;
+            switch_stack.push(char_object.lit_value);
         end
 
         if x.start_with?("CASESTMTS@@ CASEBLOCK ") or x.start_with?("CASESTMTS@@ CASESTMTS CASEBLOCK ")
