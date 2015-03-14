@@ -131,7 +131,9 @@ $grammar=[ "S-> DATATYPE FNAME BLOCK ",
 "SWITCHEXPR-> PTR [ INDEXPR ] ",
 "INDFACTOR-> ( INDEXPR ) ",
 "FACTOR-> charlit ",
-"SWITCHEXPR-> charlit "]
+"SWITCHEXPR-> charlit ",
+"DECLIDS-> id = num ",
+"DECLID-> id = num "]
 $symbols=["S","PRINTIDS","PRINTID","ID","DATATYPE","DECLIDS","DECLID","EXPR","TERM","FACTOR", "FNAME","NAME","STMT" ,"STMTS","id","num","int","char","float","void","main","printf","scanf","string","+","*","=","{","}","(",")",";",",","$","epsilon","-","/","%"]
 $symbols.concat(["CASEBLOCK","SWITCHSTMT","ELSEIFSTMT","ELSE","IFSTMT","COND","BLOCK","IFBLOCK","ELSEBLOCK","ELSEIFBLOCK","RELEXPR","RELFACTOR","RELTERM","RELNEG","ELSEIF","SWITCHEXPR","SWITCHBLOCK","CASESTMTS","CASESTMT","DEFAULTSTMT","IDNUM","if","else","<",">","!","switch","break","case",":","default","&","|","!"])
 $symbols.concat(["AMBIDS","AMBID","DO","DOBLOCK","DOWHILESTMT","WHILE","WHILESTMT","WHILEBLOCK","FORCOND","FORBLOCK","FORSTMT","INITEXPR","UPDATEEXPR","for","while","do"])

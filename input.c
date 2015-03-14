@@ -1,13 +1,9 @@
 void main(){
- 	int i,a[10];
- 	switch(i){
- 		case 0: printf("Haha");
- 		case 1: switch(i){
- 			case 5: printf("HEhe");
- 		}
- 		case 'a':printf("Hehe");
-
- 	}
+	/*This is a demo program*/
+ 	int i=5;/*hellooooo*/
+ 	printf("The number is\n%d",i);//Helo
+ 	//Hai
+ 	//Hello
  }
 
 

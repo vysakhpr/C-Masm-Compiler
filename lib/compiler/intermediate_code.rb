@@ -211,7 +211,6 @@ def intergen(production)
         when "STMT@@ ID = RELEXPR "
             inter_code<< "#{miscallaneous_stack.pop}=#{temp.pop}";
             temp_count=0;
-            print_var=[]
         when "RELNEG@@ RELNEG < RELNEG "
             t1=temp.pop
             t0=temp.pop
@@ -610,6 +609,16 @@ def intergen(production)
         when "SWITCHEXPR@@ charlit "
             char_object=charliteral.shift;
             switch_stack.push(char_object.lit_value);
+        when "DECLIDS@@ id = num "
+            id_object=identifier.shift
+            num_object=number.shift
+            inter_code<<"_t0=#{num_object.num_value}"
+            inter_code<<"#{id_object.lex_value}=_t0"
+        when "DECLID@@ id = num "
+            id_object=identifier.shift
+            num_object=number.shift
+            inter_code<<"_t0=#{num_object.num_value}"
+            inter_code<<"#{id_object.lex_value}=_t0"
         end
 
         if x.start_with?("CASESTMTS@@ CASEBLOCK ") or x.start_with?("CASESTMTS@@ CASESTMTS CASEBLOCK ")

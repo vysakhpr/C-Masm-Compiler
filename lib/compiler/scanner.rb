@@ -45,6 +45,22 @@ def scanner(words)
     while i<word.length
       peek=word[i]
       unless peek == " " or peek == "\t"  
+  #<!---------------- Check for Comments ---------------------------!>
+      if peek=="/" and word[i+1]=="*"
+        while peek!="*" or word[i+1]!="/"
+          i=i+1
+          peek=word[i]
+        end 
+        i=i+2
+        next
+      end
+
+      if peek=="/" and word[i+1]=="/"
+        while i< word.length
+          i=i+1;
+        end
+        next
+      end      
   #<!---------------- Check for digit ---------------------------!>      
 
         if !(peek=~/^[0-9]$/).nil?
