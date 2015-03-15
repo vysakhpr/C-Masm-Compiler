@@ -63,13 +63,13 @@ module Compiler
   #---------------------------------------------CODE OPTIMIZATION-------------------------------------------
 
   #----------------------------------------------CODE GENERATION--------------------------------------------
-  #code=codegen(intermediate_code)
+  code=codegen(intermediate_code)
   #puts code
-  #mode = "w";
-  #file = File.open("masm/8086/out.asm", mode);
-  #code.each do |c|
-   #file.write(c);
-   #file.write("\n")
-  #end
-  #file.close;
+  mode = "w";
+  file = File.open("masm/8086/out.asm", mode);
+  code.each do |c|
+    file.write(c);
+    file.write("\n")
+  end
+  file.close;
 end

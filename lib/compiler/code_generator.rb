@@ -147,6 +147,7 @@ def codeseg(code_segment,data_segment,intercode,if_else_trace)
             end
             code_segment<<"mov ax,cmc#{rvalue}"
             code_segment<<"mov #{lvalue},ax"
+        #-------------------------------------------------------------------------------------------------------------------Vysakh---Division and modulus----------------------------------------------
         elsif !(inter=~/_t[0-9]+=_t[0-9]+[*+-\/%]_t[0-9]+/).nil?
              #puts inter
              eq=inter.index('=')
@@ -190,6 +191,7 @@ def codeseg(code_segment,data_segment,intercode,if_else_trace)
                 code_segment<<"div bx"
                 code_segment<<"mov cmc#{lvalue},dx"
              end
+            #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
             if !data_segment.include?("cmc#{first_rvalue} dw 02")
                 data_segment<<"cmc#{first_rvalue} dw 02"
             elsif !data_segment.include?("cmc#{second_rvalue} dw 02")
@@ -375,6 +377,10 @@ def codeseg(code_segment,data_segment,intercode,if_else_trace)
             code_segment<<"jmp cmc#{inter.gsub('_goto_ ','')}"
         elsif !(inter=~/^_goto_ _loop_label_[0-9]+$/).nil?
             code_segment<<"jmp cmc#{inter.gsub('_goto_ ','')}"
+        #-------------------------------------------------------------------------------------------------------------Vysakh---Continue label goto----------------------------------------------------------
+        elsif !(inter=~/^_goto_ _continue_label_[0-9]+$/).nil?
+            code_segment<<"jmp cmc#{inter.gsub('_goto_ ','')}"
+        #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         #elsif !(inter=~/^_switch_label_[0-9]+:$/).nil?
           # code_segment<<"cmc#{inter}"
         #elsif !(inter=~/^_break_label_[0-9]+:$/).nil?

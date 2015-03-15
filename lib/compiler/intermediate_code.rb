@@ -402,6 +402,7 @@ def intergen(production)
             inter_code<<"_if_ #{t0} _then"
         when "WHILE@@ while "
             inter_code<<"_loop_label_#{loop_count}:"
+            inter_code<<"_continue_label_#{loop_count}:"
             loop_label_stack.push(loop_count)
             loop_count=loop_count+1
         when "WHILEBLOCK@@ { STMTS } "
@@ -419,6 +420,7 @@ def intergen(production)
             inter_code<<"_if_ #{t0} _then"
         when "FORBLOCK@@ { STMTS } "
             l=loop_label_stack.pop
+            inter_code<<"_continue_label_#{l}:"
             inter_code<<"#{for_update_variable_stack.pop}=#{for_update_expression_stack.pop}"
             inter_code<<"_goto_ _loop_label_#{l}"
             inter_code<<"_end_if_"
@@ -445,6 +447,7 @@ def intergen(production)
         when "STMTS@@ DO DOBLOCK DOWHILESTMT STMTS "
         when "DO@@ do "
             inter_code<<"_loop_label_#{loop_count}:"
+            inter_code<<"_continue_label_#{loop_count}:"
             loop_label_stack.push(loop_count)
             loop_count=loop_count+1
         when "DOBLOCK@@ { STMTS } "
@@ -621,7 +624,7 @@ def intergen(production)
             inter_code<<"#{id_object.lex_value}=_t0"
         when "STMT@@ continue "
             l=loop_label_stack.pop
-            inter_code<<"_goto_ _loop_label_#{l}"
+            inter_code<<"_goto_ _continue_label_#{l}"
             loop_label_stack.push(l)
         end
 
