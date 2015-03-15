@@ -119,6 +119,7 @@ def intergen(production)
             end
             switch_stack.pop
             switch_s_count=switch_s_count-1
+            index_temp_count=0;
         end
         if x.start_with?("WHILEBLOCK@@ ")
             l=loop_label_stack.pop
@@ -152,7 +153,7 @@ def intergen(production)
             print_var.push(id_object)
         when "IDS@@ ID , IDS "
                     
-        when "STMT@@ DATATYPE IDS "
+        when "STMT@@ DATATYPE DECLIDIDS "
             
         when "ID@@ id "
         	id_object=identifier.shift
@@ -161,7 +162,7 @@ def intergen(production)
             id_object=identifier.shift
             print_var.push(id_object)
         when "FACTOR@@ num "
-            num_object=number.shift
+            num_object=number.shift 
             inter_code<< "_t#{temp_count}=#{num_object.value}";
             temp.push("_t#{temp_count}");
             temp_count=temp_count+1;
@@ -211,6 +212,7 @@ def intergen(production)
         when "STMT@@ ID = RELEXPR "
             inter_code<< "#{miscallaneous_stack.pop}=#{temp.pop}";
             temp_count=0;
+            index_temp_count=0
         when "RELNEG@@ RELNEG < RELNEG "
             t1=temp.pop
             t0=temp.pop
@@ -307,9 +309,11 @@ def intergen(production)
         when "IFSTMT@@ if ( RELEXPR ) "
             t0=temp.pop
             inter_code<<"_if_ #{t0} _then"
+            index_temp_count=0
         when "ELSEIFSTMT@@ else if ( RELEXPR ) "
             t0=temp.pop
             inter_code<<"_else_if_ #{t0} _then"
+            index_temp_count=0
         when "ELSE@@ else "
             inter_code<<"_else_ _then"
         when "IFBLOCK@@ { STMTS } "
@@ -359,6 +363,7 @@ def intergen(production)
             length=string_array.length
             inter_code<<"_printString_ #{string_array[0]}\""
             $PRINTBUF<<string_array[0]
+            index_temp_count=0;
             for i in  (1..length-1)
                 object=print_var.shift
                 case format.shift
@@ -385,6 +390,7 @@ def intergen(production)
                     $PRINTBUF<<"\"#{string_array[i]}" 
                 end
             end
+
         when "STMT@@ printf ( string ) "
             string=printbuff.shift.lit_value
             inter_code<<"_printString_ #{string}"
@@ -400,6 +406,7 @@ def intergen(production)
         when "WHILESTMT@@ WHILE ( RELEXPR ) "
             t0=temp.pop
             inter_code<<"_if_ #{t0} _then"
+            index_temp_count=0
         when "WHILE@@ while "
             inter_code<<"_loop_label_#{loop_count}:"
             inter_code<<"_continue_label_#{loop_count}:"
@@ -418,6 +425,7 @@ def intergen(production)
             loop_label_stack.push(loop_count)
             loop_count=loop_count+1
             inter_code<<"_if_ #{t0} _then"
+            index_temp_count=0
         when "FORBLOCK@@ { STMTS } "
             l=loop_label_stack.pop
             inter_code<<"_continue_label_#{l}:"
@@ -433,6 +441,7 @@ def intergen(production)
             inter_code<< "#{miscallaneous_stack.pop}=#{temp.pop}";
             inter_code<<"_loop_label_#{loop_count}:"
             temp_count=0;
+            index_temp_count=0;
             print_var=[]
         when "UPDATEEXPR@@ ID = EXPR "
             id_lexeme=miscallaneous_stack.pop
@@ -442,6 +451,7 @@ def intergen(production)
             for_update_variable_stack.push(id_lexeme)
             temp_count=0;
             for_update_count=for_update_count+1
+            index_temp_count=0;
             print_var=[]
         when "STMTS@@ DO DOBLOCK DOWHILESTMT "
         when "STMTS@@ DO DOBLOCK DOWHILESTMT STMTS "
@@ -457,11 +467,13 @@ def intergen(production)
             inter_code<<"_if_ #{t} _then"
             inter_code<<"_goto_ _loop_label_#{loop_label_stack.pop}"
             inter_code<<"_end_if_"
+            index_temp_count=0
         when "STMT@@ scanf ( string , AMBIDS ) "
             string=scanbuff.shift.lit_value
             string_array=string.split(/%[dcfu]/)
             format=string.scan(/%[dcfu]/)
             length=string_array.length
+            index_temp_count=0;
             for i in  (1..length-1)
                 object=scan_var.shift
                 case format.shift
@@ -547,13 +559,13 @@ def intergen(production)
         when "ID@@ PTR ` INDEXPR ` "
             id_lexeme=(array_name_stack.pop()).lex_value
             miscallaneous_stack.push("_getarray_ #{id_lexeme} _index_ #{index_temp.pop}")
-            index_temp_count=0;
+            
         when "FACTOR@@ PTR ` INDEXPR ` "
             id_lexeme=(array_name_stack.pop()).lex_value
             inter_code<< "_t#{temp_count}=_getarray_ #{id_lexeme} _index_ #{index_temp.pop}"
             temp.push("_t#{temp_count}");
             temp_count=temp_count+1;
-            index_temp_count=0;
+            
         when "AMBIDS@@ & PTR ` INDEXPR ` "
             id_lexeme=(array_name_stack.pop()).lex_value
             y=findArrayObject(id_lexeme)
@@ -563,7 +575,7 @@ def intergen(production)
             else
                 scan_var.push(y)
             end
-            index_temp_count=0;
+            
         when "AMBID@@ & PTR ` INDEXPR ` "
             id_lexeme=(array_name_stack.pop()).lex_value
             y=findArrayObject(id_lexeme)
@@ -573,7 +585,7 @@ def intergen(production)
             else
                 scan_var.push(y)
             end
-            index_temp_count=0;
+            
         when "PRINTIDS@@ PTR ` INDEXPR ` "
             id_lexeme=(array_name_stack.pop()).lex_value
             y=findArrayObject(id_lexeme)
@@ -583,7 +595,7 @@ def intergen(production)
             else
                 print_var.push(y)
             end
-            index_temp_count=0;
+            
         when "PRINTID@@ PTR ` INDEXPR ` "
             id_lexeme=(array_name_stack.pop()).lex_value
             y=findArrayObject(id_lexeme)
@@ -593,17 +605,17 @@ def intergen(production)
             else
                 print_var.push(y)
             end
-            index_temp_count=0;
+            
         when "IDNUM@@ PTR ` INDEXPR ` "
             id_lexeme=(array_name_stack.pop()).lex_value
             inter_code<< "_t#{temp_count}=_getarray_ #{id_lexeme} _index_ #{index_temp.pop}";
             temp.push("_t#{temp_count}");
             temp_count=temp_count+1;
-            index_temp_count=0;
+            
         when "SWITCHEXPR@@ PTR ` INDEXPR ` "
             id_lexeme=(array_name_stack.pop()).lex_value
             switch_stack.push("_getarray_ #{id_lexeme} _index_ #{index_temp.pop}");
-            index_temp_count=0;
+            
         when "FACTOR@@ charlit "
             char_object=charliteral.shift;
             inter_code<< "_t#{temp_count}=#{char_object.lit_value}";
