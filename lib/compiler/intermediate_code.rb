@@ -622,6 +622,16 @@ def intergen(production)
             num_object=number.shift
             inter_code<<"_t0=#{num_object.num_value}"
             inter_code<<"#{id_object.lex_value}=_t0"
+        when "DECLIDS@@ id = charlit "
+            id_object=identifier.shift
+            char_object=charliteral.shift
+            inter_code<<"_t0=#{char_object.lit_value}"
+            inter_code<<"#{id_object.lex_value}=_t0"
+        when "DECLID@@ id = charlit "
+            id_object=identifier.shift
+            char_object=charliteral.shift
+            inter_code<<"_t0=#{char_object.lit_value}"
+            inter_code<<"#{id_object.lex_value}=_t0"
         when "STMT@@ continue "
             l=loop_label_stack.pop
             inter_code<<"_goto_ _continue_label_#{l}"

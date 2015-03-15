@@ -1,4 +1,5 @@
 require_relative "grammar"
+require_relative "parse_error_detection"
 
 def closure(i,g)
   j=i
@@ -245,8 +246,8 @@ def parse(word,term_sym,non_term_sym,g)
   j=0
   st=[0]
   l=0
-    while true
-      a=words[j]
+  while true
+    a=words[j]
     s=st[l]
     unless s.nil?
     d=$action[s.to_i][term_sym.index(a)]
@@ -284,6 +285,7 @@ def parse(word,term_sym,non_term_sym,g)
       return prod
     else  
       puts "ERROR"
+      error_recovery_routine(st,l)
       return prod 
     end
   end
